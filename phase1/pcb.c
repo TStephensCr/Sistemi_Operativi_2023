@@ -85,9 +85,8 @@ int emptyChild(pcb_t *p) {
 }
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
-    list_add(&p->p_list, &prnt->p_child);
     p->p_parent = prnt;
-    //fin qui va bene ma c'è un bordello per p_sib, è quello su cui da errore
+    list_add_tail(&p->p_sib, &prnt->p_child);
 }
 
 pcb_t *removeChild(pcb_t *p) {
@@ -95,3 +94,6 @@ pcb_t *removeChild(pcb_t *p) {
 
 pcb_t *outChild(pcb_t *p) {
 }
+
+
+
