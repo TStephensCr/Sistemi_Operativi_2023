@@ -90,9 +90,30 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
 }
 
 pcb_t *removeChild(pcb_t *p) {
+    if(emptyChild(p))
+        return NULL;
+    else{
+        struct list_head *tmp = &p->p_child;
+        list_del(p);//modifico la lista e ritorno il pointer rimosso
+        return tmp;
+    }
 }
 
 pcb_t *outChild(pcb_t *p) {
+    if(p->p_parent==NULL){
+        return NULL;
+    }else{
+        struct list_head *tmp = &p->p_list;
+        while(p != tmp){
+            if(tmp==NULL){
+                return NULL;
+            }
+            tmp = tmp->next;
+        }
+        list_del(tmp);
+        p->p_parent = NULL;
+        return p;
+    }
 }
 
 
