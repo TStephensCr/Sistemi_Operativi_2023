@@ -94,7 +94,12 @@ pcb_t *removeChild(pcb_t *p) {
         return NULL;
     else{
         struct list_head *tmp = &p->p_child;
-        list_del(p);//modifico la lista e ritorno il pointer rimosso
+        if(tmp->next == NULL){
+            &p->p_parent->p_child == NULL;
+            return tmp;
+        }
+        &p->p_parent->p_child == tmp->next;
+        __list_del(tmp->prev, tmp->next);//modifico la lista e ritorno il pointer rimosso
         return tmp;
     }
 }
