@@ -90,34 +90,31 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
 }
 
 pcb_t *removeChild(pcb_t *p) {
-    if(emptyChild(p))
+    if(emptyProcQ(&p->p_child))
         return NULL;
     else{
-        struct list_head *tmp = &p->p_child;
-        if(tmp->next == NULL){
-            &p->p_parent->p_child == NULL;
-            return tmp;
-        }
-        &p->p_parent->p_child == tmp->next;
-        __list_del(tmp->prev, tmp->next);//modifico la lista e ritorno il pointer rimosso
-        return tmp;
+        //salvo figlio prima di rimuoverlo per poi returnarlo
+        pcb_t* C= container_of(p->p_child.next, pcb_t, p_sib);
+        //rimozione figlio dalla lista
+        list_del(p->p_child.next);
+        return C;
     }
 }
 
+//rendi la pcb puntata da p non più figlia di suo padre e ritornalo, se p non ha padre ritorna NULL
 pcb_t *outChild(pcb_t *p) {
-    if(p->p_parent==NULL){
+    if(p->p_parent==NULL)
         return NULL;
-    }else{
-        struct list_head *tmp = &p->p_list;
-        while(p != tmp){
-            if(tmp==NULL){
-                return NULL;
+    else{
+        struct list_head *pos;
+        list_for_each(pos, &p->p_parent->p_child){
+            pcb_t *current= container_of(pos,pcb_t, p_sib);
+            if(current == p){
+                list_del(pos);
+                return p;
             }
-            tmp = tmp->next;
         }
-        list_del(tmp);
-        p->p_parent = NULL;
-        return p;
+        return NULL;
     }
 }
 
