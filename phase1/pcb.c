@@ -13,13 +13,13 @@ void initPcbs() {
 }
 
 void freePcb(pcb_t *p) {
-    list_add_tail(&p->p_list, &pcbFree_h);
+    list_add_tail(&p->p_list, &pcbFree_h);//aggiungo in coda alla lista dei pcb liberi
 }
 
 pcb_t *allocPcb() {
-    if(list_empty(&pcbFree_h)){//FIX TEMPORANEA
+    if(list_empty(&pcbFree_h)){//se la lista dei pcb liberi è vuota
         return NULL;
-    } else {
+    } else {//inizializzo il pcb e lo rimuovo dalla lista dei pcb liberi
         pcb_t *p = container_of(pcbFree_h.next, pcb_t, p_list);
         list_del(&p->p_list);
         INIT_LIST_HEAD(&p->msg_inbox);
@@ -38,40 +38,40 @@ void mkEmptyProcQ(struct list_head *head) {
 }
 
 int emptyProcQ(struct list_head *head) {
-    return list_empty(head);
+    return list_empty(head);//ritorna 1 se la lista è vuota, 0 altrimenti
 }
 
 void insertProcQ(struct list_head *head, pcb_t *p) {
-    list_add_tail(&p->p_list, head);
+    list_add_tail(&p->p_list, head);//aggiungo la pcb puntata da p in coda alla lista puntata da head
 }
 
 pcb_t *headProcQ(struct list_head *head) {
-    if(list_empty(head)){//prova emptyProcQ semmai
+    if(list_empty(head)){//se la lista è vuota ritorno NULL
         return NULL;
     } else {
-        return container_of(list_next(head), pcb_t, p_list);
+        return container_of(list_next(head), pcb_t, p_list);//ritorno la pcb puntata dal primo elemento della lista
     }
 }
 
 pcb_t *removeProcQ(struct list_head *head) {
-    if(list_empty(head)){
+    if(list_empty(head)){//NULL se la lista è vuota
         return NULL;
     } else {
         pcb_t *p = headProcQ(head);
-        list_del(&p->p_list);
+        list_del(&p->p_list);//cancello head dalla lista
         return p;
     }
 }
 
 pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
-    if(emptyProcQ(head))
+    if(emptyProcQ(head))//se la lista head è vuota
         return NULL;
-    if(headProcQ(head) == p){
+    if(headProcQ(head) == p){//caso ottimo
         list_del(&p->p_list);
         return p;
     }
     pcb_t *tmp;
-    list_for_each_entry(tmp, head, p_list){
+    list_for_each_entry(tmp, head, p_list){//scorro la lista
         if(tmp == p){
             list_del(&p->p_list);
             return p;
@@ -84,7 +84,7 @@ int emptyChild(pcb_t *p) {
     return list_empty(&p->p_child);
 }
 
-void insertChild(pcb_t *prnt, pcb_t *p) {
+void insertChild(pcb_t *prnt, pcb_t *p) {//aggiungo p come figlio di prnt
     p->p_parent = prnt;
     list_add_tail(&p->p_sib, &prnt->p_child);
 }
