@@ -1,7 +1,7 @@
 #include "const.h"
 //sta roba dell'and non ha senso...
 int interrupt_line(/*interrupt*/){
-    if(getCAUSE() /*&&interrupt*/){
+    if(getCAUSE() /*&& interrupt*/){
         
     }
 }
