@@ -1,13 +1,36 @@
-#include "const.h"
-//sta roba dell'and non ha senso...
-int interrupt_line(/*interrupt*/){
-    if(getCAUSE() /*&& interrupt*/){
-        
-    }
+#include <const.h>
+
+void interrupthandler();//funzioni abbastanza ovvie comunque sotto spiego cosa fanno
+void PLT_handler();
+void IT_handler();
+void NT_handler();//forse qui va qualcosa in input
+void startinterrupt();
+void endinterrupt();
+void ritorna_device(int *);
+
+//DETERMINA IL TIPO DI INTERRUPT E ASSEGNA 
+void interrupthandler(){
+    startinterrupt();
+    if(getCAUSE() && LOCALTIMERINT) //lascia in questo ordine per la priorità
+        PLT_handler();
+    else if(getCAUSE() && TIMERINTERRUPT)
+        IT_handler();
+    else
+        NT_handler();
+    endinterrupt();
 }
 
-void interrupt_eh(){
-    //controlli tutte le lines?? il prof dice che determini le lines con il bitwise and ma quello lo fai su tutte le lines bruh
-    //una volta determinate le lines che hanno un interrupt prendi quello con priorità maggiore 
-    //NB terminal transmission >> terminal receipt
+
+//setta l'interruzione
+void startinterrupt(){
+  //se il processo corrente non è nullo allora aggiorna il tempo
+  //poi cambia lo status  
+}
+
+void PLT_handler(){
+
+}
+
+void IT_handler(){
+
 }
