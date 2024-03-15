@@ -1,5 +1,5 @@
 #include "./headers/initial.h"
-
+#include "const.h"
 /*
 MANCA: (DEBUG)
 2.1
@@ -7,6 +7,7 @@ MANCA: (DEBUG)
 7 (RAMTOP)
 7.1
 */
+
 
 extern void test ();
 
@@ -53,6 +54,15 @@ void first_pcb(){
 
     insertProcQ(&readyQueue, new_pcb);
     processCount++;
+}
+
+//tempo che serve a svolgere  il processo
+cpu_t tempopassato(){
+    cpu_t attuale;
+    STCK(attuale);
+    cpu_t risultante = attuale - ultimo;
+    STCK (ultimo);
+    return risultante;
 }
 
 int main(void){

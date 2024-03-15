@@ -1,4 +1,5 @@
-#include <const.h>
+#include <umps3/umps/cp0.h>
+#include "initial.c"
 
 void interrupthandler();//funzioni abbastanza ovvie comunque sotto spiego cosa fanno
 void PLT_handler();
@@ -21,14 +22,33 @@ void interrupthandler(){
 }
 
 
-//setta l'interruzione
+//aggiorna il tempo di esecuzione del current process così da non dargli il tempo di esecuzione dell'interrupt
 void startinterrupt(){
   //se il processo corrente non è nullo allora aggiorna il tempo
   //poi cambia lo status  
+  if(currentProcess != NULL){
+    currentProcess->p_time += tempopassato();
+  }
+  setSTATUS (getSTATUS() && ~TEBITON);
+}
+
+//fine interrupt e riprende il processo interrotto, se nullo chiama lo scheduler
+void endinterrupt(){
+    setSTATUS (getSTATUS() || TEBITON);
+    STCK (ultimo);
+    if (currentProcess != NULL)
+        LDST (EXCEPTION_STATE);
+    else
+        scheduler ();
 }
 
 void PLT_handler(){
+    currentProcess->p_sib = EXCEPTION_STATE;
+    currentProcess->p_time += tempopassato();
 
+    insertProcQ(&readyQueue, currentProcess);
+    currentProcess = NULL;
+    
 }
 
 void IT_handler(){
