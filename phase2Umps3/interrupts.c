@@ -9,6 +9,8 @@ void startinterrupt();
 void endinterrupt();
 void get_deviceinterrupt(int *);
 int get_numdevice(int);
+int get_status(int);
+void set_status(char);
 
 
 //DETERMINA IL TIPO DI INTERRUPT E ASSEGNA 
@@ -65,29 +67,31 @@ void IT_handler(){
 int get_numdevice(int line){
     switch (line){
         case DEV1ON:
-            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (1 * 0x10)        
+            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (1 * 0x10);        
             break;
         case DEV2ON:
-            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (2 * 0x10)
+            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (2 * 0x10);
             break;
         case DEV3ON:
-            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (3 * 0x10)        
+            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (3 * 0x10);       
             break;
         case DEV4ON:
-            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (4 * 0x10)        
+            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (4 * 0x10);       
             break;
         case DEV5ON:
-            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (5 * 0x10)        
+            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (5 * 0x10);       
             break;
         case DEV6ON:
-            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (6 * 0x10)        
+            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (6 * 0x10);       
             break;
         case DEV7ON:
-            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (7 * 0x10)        
+            devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (7 * 0x10);       
             break;
         
     default:
         break;
     }
+    status = get_status(devAddrBase);
+    set_status(ACK);
     
 }
