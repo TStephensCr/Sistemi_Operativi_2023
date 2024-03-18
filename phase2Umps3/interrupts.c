@@ -53,15 +53,19 @@ void endinterrupt(){
 
 void NT_handler(int ip){
     int line, numero, mask;
-
+    devAddrBase = get_numdevice(line);
+    status = get_status(devAddrBase);
+    set_status(ACK);
+    /**
+     * manda messaggio e sblocca il pb in attes di questo device
+     * aggiorna il registro v0 del pcb con status
+     * metti il pcb sbloccato nella ready queue cambiando lo state da blocked a ready
+     * ridai il controllo al current process facendo un LDST sull'exception state salvato (si trova all'inizio della BIOSDATAPAGE)
+    */
 }
 
 void IT_handler(){
-    while (headBlocked (&itSemaphore) != NULL){
-        verhogen (&itSemaphore);
-        softBlockedCount--;
-        }
-    LDIT (PSECOND);
+   
 }
 
 int get_numdevice(int line){
@@ -91,7 +95,4 @@ int get_numdevice(int line){
     default:
         break;
     }
-    status = get_status(devAddrBase);
-    set_status(ACK);
-    
 }
