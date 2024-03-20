@@ -1,5 +1,4 @@
 #include "./headers/initial.h"
-#include "const.h"
 /*
 MANCA: (DEBUG)
 2.1
@@ -7,11 +6,21 @@ MANCA: (DEBUG)
 7 (RAMTOP)
 7.1
 */
+unsigned int processCount=0;                  //Process Count, numero di processi attivi e non terminati
+unsigned int softBlockCount;                //Soft-Block Count, numero di processi in waiting per I/O o per tempo esaurito
+struct list_head readyQueue;                //Ready Queue, puntatore alla coda di porcessi in ready
+pcb_PTR currentProcess;                     //Current Process, punta al processo in running
+pcb_PTR blockedpcbs[SEMDEVLEN][2];          //idk va capito
+cpu_t ultimo;                               //ultimo TOD
 
+void uTLB_RefillHandler() {
+    setENTRYHI(0x80000000);
+    setENTRYLO(0x00000000);
+    TLBWR();
+    LDST((state_t*) 0x0FFFF000);
+}
 
-extern void test ();
-
-void second_pcb(){
+static void second_pcb(){
     pcb_PTR new_pcb = allocPcb();
     
     RAMTOP(new_pcb->p_s.reg_sp);    //Da togliere e mettere quella sotto ma corretta
@@ -34,7 +43,7 @@ void second_pcb(){
     processCount++;
 }
 
-void first_pcb(){
+static void first_pcb(){
     pcb_PTR new_pcb = allocPcb();
 
     RAMTOP(new_pcb->p_s.reg_sp);
@@ -54,15 +63,6 @@ void first_pcb(){
 
     insertProcQ(&readyQueue, new_pcb);
     processCount++;
-}
-
-//tempo che serve a svolgere  il processo
-cpu_t tempopassato(){
-    cpu_t attuale;
-    STCK(attuale);
-    cpu_t risultante = attuale - ultimo;
-    STCK (ultimo);
-    return risultante;
 }
 
 int main(void){

@@ -2,7 +2,6 @@
 
 static pcb_t pcbTable[MAXPROC];
 LIST_HEAD(pcbFree_h);
-static int next_pid = 1;
 
 void initPcbs() {
     INIT_LIST_HEAD(&pcbFree_h);

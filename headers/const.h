@@ -45,6 +45,7 @@
 
 #define ANYMESSAGE 0
 #define MSGNOGOOD -1
+#define DEST_NOT_EXIST -2
 #define SENDMESSAGE -1
 #define RECEIVEMESSAGE -2
 
