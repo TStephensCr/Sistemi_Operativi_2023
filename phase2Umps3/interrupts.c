@@ -19,7 +19,7 @@ cpu_t tempopassato(){
 
 //DETERMINA CHE TIPO DI INTERRUPT è PENDING IN BASE ALLA LINEA
 //POI CONTROLLA GLI 8 DEVICE PER CAPIRE A QUALE APPARTIENE
-// 
+// QUALCOSA NOPN VA T.T     
 void interrupthandler(){
     startinterrupt();
     if(getCAUSE() && LOCALTIMERINT){//line 1
@@ -81,25 +81,25 @@ void NT_handler(int ip){
 int get_numdevice(int line){
     switch (line){
         case DEV1ON:
-            return int devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (1 * 0x10);        
+            return int devAddrBase = 0x10000054 + ((1 - 3) * 0x80) + (0x00000002 * 0x10);        
             break;
         case DEV2ON:
-            return devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (2 * 0x10);
+            return devAddrBase = 0x10000054 + ((2 - 3) * 0x80) + (0x00000004 * 0x10);
             break;
         case DEV3ON:
-            return devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (3 * 0x10);       
+            return devAddrBase = 0x10000054 + ((3 - 3) * 0x80) + (0x00000008 * 0x10);       
             break;
         case DEV4ON:
-            return devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (4 * 0x10);       
+            return devAddrBase = 0x10000054 + ((4 - 3) * 0x80) + (0x00000010 * 0x10);       
             break;
         case DEV5ON:
-            return devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (5 * 0x10);       
+            return devAddrBase = 0x10000054 + ((5 - 3) * 0x80) + (0x00000020 * 0x10);       
             break;
         case DEV6ON:
-            return devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (6 * 0x10);       
+            return devAddrBase = 0x10000054 + ((6 - 3) * 0x80) + (0x00000040 * 0x10);       
             break;
         case DEV7ON:
-            return devAddrBase = 0x10000054 + ((IntlineNo - 3) * 0x80) + (7 * 0x10);       
+            return devAddrBase = 0x10000054 + ((7 - 3) * 0x80) + (0x00000080 * 0x10);       
             break;
         
     default:
