@@ -20,24 +20,31 @@ cpu_t tempopassato(){
 //DETERMINA CHE TIPO DI INTERRUPT è PENDING IN BASE ALLA LINEA
 //POI CONTROLLA GLI 8 DEVICE PER CAPIRE A QUALE APPARTIENE
 // QUALCOSA NOPN VA T.T     
+// STRUTTURE DEI TERMINAL DEVICES A PAG 58 line 7
+// TUTTI GLI EXTERNAL DEVICE HANNO LA STESSSA STRUTTURA 
+// external devices line 3-6
+// in ogni linea controlla quale device ha un interrupt pending attraverso la interrupting device bit map
+// 
 void interrupthandler(){
     startinterrupt();
-    if(getCAUSE() && LOCALTIMERINT){//line 1
-        // currentProcess->p_sib = EXCEPTION_STATE;
-        // currentProcess->p_time += tempopassato();
-        // insertProcQ(&readyQueue, currentProcess);
-        // currentProcess = NULL;
+    if(getCAUSE() && LOCALTIMERINT){//line 1    plt interrupt
+        currentProcess->p_sib = EXCEPTION_STATE;
+        currentProcess->p_time += tempopassato();
+        insertProcQ(&readyQueue, currentProcess);
+        currentProcess = NULL;
         address = get_numdevice(1);
     }                                               //lascia in questo ordine per la priorità
-    else if(getCAUSE() && TIMERINTERRUPT)//line 2
+    else if(getCAUSE() && TIMERINTERRUPT)//line 2   interval timer interrupt
         address = get_numdevice(2);
     else if(getCAUSE() && DISKINTERRUPT)//line 3
         address = get_numdevice(3);
     else if(getCAUSE() && FLASHINTERRUPT)//line 4
         address = get_numdevice(4);
-    else if(getCAUSE() && PRINTINTERRUPT)//line 5
+    else if(getCAUSE() && NETWORKINTERRUPT)//line 5
         address = get_numdevice(5);
-    else if(getCAUSE() && TERMINTERRUPT)// line 6
+    else if(getCAUSE() && PRINTINTERRUPT)// line 6
+        address = get_numdevice(6);
+    else if(getCAUSE() && TERMINTERRUPT)// line 7
         address = get_numdevice(6);
     endinterrupt();
 }
@@ -81,25 +88,25 @@ void NT_handler(int ip){
 int get_numdevice(int line){
     switch (line){
         case DEV1ON:
-            return int devAddrBase = 0x10000054 + ((1 - 3) * 0x80) + (0x00000002 * 0x10);        
+            return int devAddrBase = 0x10000054 + ((1 - 3) * 0x80) + (devicenumber * 0x10);        
             break;
         case DEV2ON:
-            return devAddrBase = 0x10000054 + ((2 - 3) * 0x80) + (0x00000004 * 0x10);
+            return devAddrBase = 0x10000054 + ((2 - 3) * 0x80) + (devicenumber * 0x10);
             break;
         case DEV3ON:
-            return devAddrBase = 0x10000054 + ((3 - 3) * 0x80) + (0x00000008 * 0x10);       
+            return devAddrBase = 0x10000054 + ((3 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         case DEV4ON:
-            return devAddrBase = 0x10000054 + ((4 - 3) * 0x80) + (0x00000010 * 0x10);       
+            return devAddrBase = 0x10000054 + ((4 - 3) * 0x80) + (devicenumber* 0x10);       
             break;
         case DEV5ON:
-            return devAddrBase = 0x10000054 + ((5 - 3) * 0x80) + (0x00000020 * 0x10);       
+            return devAddrBase = 0x10000054 + ((5 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         case DEV6ON:
-            return devAddrBase = 0x10000054 + ((6 - 3) * 0x80) + (0x00000040 * 0x10);       
+            return devAddrBase = 0x10000054 + ((6 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         case DEV7ON:
-            return devAddrBase = 0x10000054 + ((7 - 3) * 0x80) + (0x00000080 * 0x10);       
+            return devAddrBase = 0x10000054 + ((7 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         
     default:
