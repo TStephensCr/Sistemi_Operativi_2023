@@ -11,7 +11,6 @@ extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
 extern cpu_t ultimo;
 
 #define EXCEPTION_STATE = (state_t *)BIOSDATAPAGE;
-#define NETWORKINTERRUPT 0x00002000
 
 int intconst[7];
 

@@ -38,10 +38,8 @@ void interrupthandler(){
         address = get_numdevice(2);
     else if(getCAUSE() && DISKINTERRUPT)//line 3
         address = get_numdevice(3);
-    else if(getCAUSE() && FLASHINTERRUPT)//line 4
+    else if(getCAUSE() && FLASHINTERRUPT)//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
         address = get_numdevice(4);
-    else if(getCAUSE() && NETWORKINTERRUPT)//line 5
-        address = get_numdevice(5);
     else if(getCAUSE() && PRINTINTERRUPT)// line 6
         address = get_numdevice(6);
     else if(getCAUSE() && TERMINTERRUPT)// line 7
