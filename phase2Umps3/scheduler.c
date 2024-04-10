@@ -1,4 +1,5 @@
 #include "./headers/scheduler.h"
+#include "scheduler.h"
 
 void scheduler(){
     currentProcess = removeProcQ(&readyQueue);

@@ -1,12 +1,27 @@
 #include "/usr/include/umps3/umps/libumps.h"
+#include "./headers/ssi.h"
 
 void SSIRequest(pcb_t* sender, int service, void* ar){
     switch(service){
         case 1:
-            createProcess();
+            //check resources availability
+            if(emptyProcQ(&freePcb)){
+                return NOPROC;
+            }
+
+            //initialize new process
+
+            pcb_t *newProcess = allocPcb();
+            newProcess->p_s = *ar->state;
+            newProcess->p_supportStruct = *ar->support;
+            newProcess->p_time = 0;
+            insertProcQ(&sender->p_list, newProcess);
+            insertChild(sender, newProcess);
+            //return control current process
+            LDST(&currentProcess->p_s)
             break;
         case 2:
-            terminateProcess((pcb_t*)ar);
+            
             break;
         case 3:
             //DOIO
@@ -35,10 +50,6 @@ void remoteProcedureCall(){
     SSIRequest(pcb_t* sender, int service, void* arg);//satisfy request
     //send back results
     }
-}
-
-pcb_t* createProcess(){
-
 }
 
 void terminateProcess(pcb_t* process){
