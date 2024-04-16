@@ -3,8 +3,6 @@
 
 #include "../../headers/types.h"
 #include "../../headers/const.h"
-#include "../../headers/const.h"
-#include "../const.h"
 #include "../../phase1/headers/pcb.h"
 #include "../../phase1/headers/msg.h"
 #include "/usr/include/umps3/umps/libumps.h"
