@@ -17,6 +17,7 @@ int intconst[7];
 void interrupthandler();//funzioni abbastanza ovvie comunque sotto spiego cosa fanno
 void IT_handler();
 void NT_handler(int);//forse qui va qualcosa in input
+void PLT_handler();
 void startinterrupt();
 void endinterrupt();
 void get_deviceinterrupt(int *);

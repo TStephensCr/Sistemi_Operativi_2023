@@ -7,6 +7,7 @@ extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
 extern cpu_t ultimo;
 
+//interrupting device bitmap è una matrice di booleani in cui se c'è un 1 allora c'è un interrupt pending
 
 //tempo che serve a svolgere  il processo
 cpu_t tempopassato(){
@@ -37,13 +38,17 @@ void interrupthandler(){
     else if(getCAUSE() && TIMERINTERRUPT)//line 2   interval timer interrupt
         address = get_numdevice(2);
     else if(getCAUSE() && DISKINTERRUPT)//line 3
+        NT_handler(3);
         address = get_numdevice(3);
     else if(getCAUSE() && FLASHINTERRUPT)//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
+        NT_handler(4);
         address = get_numdevice(4);
     else if(getCAUSE() && PRINTINTERRUPT)// line 6
+        NT_handler(6);
         address = get_numdevice(6);
     else if(getCAUSE() && TERMINTERRUPT)// line 7
-        address = get_numdevice(6);
+        NT_handler(7);
+        address = get_numdevice(7);
     endinterrupt();
 }
 
