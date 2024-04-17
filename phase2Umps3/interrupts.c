@@ -33,22 +33,26 @@ void interrupthandler(){
         currentProcess->p_time += tempopassato();
         insertProcQ(&readyQueue, currentProcess);
         currentProcess = NULL;
-        address = get_numdevice(1);
+        int address = get_numdevice(1);
     }                                               //lascia in questo ordine per la priorità
     else if(getCAUSE() && TIMERINTERRUPT)//line 2   interval timer interrupt
-        address = get_numdevice(2);
-    else if(getCAUSE() && DISKINTERRUPT)//line 3
+        int address = get_numdevice(2);
+    else if(getCAUSE() && DISKINTERRUPT){//line 3
         NT_handler(3);
-        address = get_numdevice(3);
-    else if(getCAUSE() && FLASHINTERRUPT)//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
+        int address = get_numdevice(3);
+    }
+    else if(getCAUSE() && FLASHINTERRUPT){//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
         NT_handler(4);
-        address = get_numdevice(4);
-    else if(getCAUSE() && PRINTINTERRUPT)// line 6
+        int address = get_numdevice(4);
+    }
+    else if(getCAUSE() && PRINTINTERRUPT){// line 6
         NT_handler(6);
-        address = get_numdevice(6);
-    else if(getCAUSE() && TERMINTERRUPT)// line 7
+        int address = get_numdevice(6);
+    }
+    else if(getCAUSE() && TERMINTERRUPT){// line 7 per i terminal devices devi fare una roba diversa
         NT_handler(7);
-        address = get_numdevice(7);
+        int address = get_numdevice(7);
+    }
     endinterrupt();
 }
 
@@ -76,6 +80,7 @@ void endinterrupt(){
 
 void NT_handler(int ip){
     int line, numero, mask;
+    int status; // Declaration of status variable
     int devAddrBase = get_numdevice(line);
     status = get_status(devAddrBase);
     set_status(ACK);
@@ -89,27 +94,28 @@ void NT_handler(int ip){
 
 
 int get_numdevice(int line){
+    int devicenumber; // Declaration of devicenumber variable
     switch (line){
         case DEV1ON:
-            return int devAddrBase = 0x10000054 + ((1 - 3) * 0x80) + (devicenumber * 0x10);        
+            return 0x10000054 + ((1 - 3) * 0x80) + (devicenumber * 0x10);        
             break;
         case DEV2ON:
-            return devAddrBase = 0x10000054 + ((2 - 3) * 0x80) + (devicenumber * 0x10);
+            return 0x10000054 + ((2 - 3) * 0x80) + (devicenumber * 0x10);
             break;
         case DEV3ON:
-            return devAddrBase = 0x10000054 + ((3 - 3) * 0x80) + (devicenumber * 0x10);       
+            return 0x10000054 + ((3 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         case DEV4ON:
-            return devAddrBase = 0x10000054 + ((4 - 3) * 0x80) + (devicenumber* 0x10);       
+            return 0x10000054 + ((4 - 3) * 0x80) + (devicenumber* 0x10);       
             break;
         case DEV5ON:
-            return devAddrBase = 0x10000054 + ((5 - 3) * 0x80) + (devicenumber * 0x10);       
+            return 0x10000054 + ((5 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         case DEV6ON:
-            return devAddrBase = 0x10000054 + ((6 - 3) * 0x80) + (devicenumber * 0x10);       
+            return 0x10000054 + ((6 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         case DEV7ON:
-            return devAddrBase = 0x10000054 + ((7 - 3) * 0x80) + (devicenumber * 0x10);       
+            return 0x10000054 + ((7 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         
     default:

@@ -1,9 +1,9 @@
 # Autori
 
 ## Gianluca Noviello
-- **email:**
-- **matricola:**
-- **occupazione:**
+- **email:**: gianluca.noviello@studio.unibo.it
+- **matricola:**: 0001078601
+- **occupazione:**: ultima metà delle funzioni dei pcb e interrupts.
 
 ##  Matteo Panicciari
 - **email**: matteo.panicciari@studio.unibo.it
