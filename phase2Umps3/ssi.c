@@ -27,7 +27,8 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
             return sender->p_time;
             break;
         case 5:
-            //put sender in WAIT until next pseudo-clock tick, and keep a list of those waiting
+            softBlockCount++;
+            //insertProcQ(...,sender);  manca queue waiting for clock penso
             break;
         case 6:
             return sender->p_supportStruct;
@@ -43,10 +44,10 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
             ar = (service == NULL) ? NULL : ar; //If service is null, the sender process must be terminated, regardless of the argument
             pcb_t tmp_pcb = (ar == NULL) ? sender : ar;//If the argument is null, the sender process must be terminated
 
-            do{
+            //do{
                 terminateProcess(tmp_pcb);
-                tmp_pcb = tmp_pcb->
-            }while()
+                //tmp_pcb = tmp_pcb->
+            //}while()
 
             break;
     }
@@ -64,7 +65,7 @@ void terminateProcess(pcb_t* process){
 
     outChild(process);
 
-    //If a terminated process is waiting for the completion of a DoIO, the value used to track this should be adjusted accordingly.
+    //If a terminated process is waiting for the completion of a DoIO, the value used to track this should be adjusted accordingly. MANCA ARRAY BLOCKED
 
     //If a terminated process is waiting for clock, the value used to track this should be adjusted accordingly.
 
