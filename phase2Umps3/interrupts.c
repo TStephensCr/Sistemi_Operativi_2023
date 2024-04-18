@@ -28,15 +28,24 @@ cpu_t tempopassato(){
 // 
 void interrupthandler(){
     startinterrupt();
-    if(getCAUSE() && LOCALTIMERINT){//line 1    plt interrupt
+    if(getCAUSE() && LOCALTIMERINT){//line 1    plt interrupt FINITI
         currentProcess->p_sib = EXCEPTION_STATE;
-        currentProcess->p_time += tempopassato();
+        currentProcess->p_time = TIMESLICE;
         insertProcQ(&readyQueue, currentProcess);
         currentProcess = NULL;
-        int address = get_numdevice(1);
+        scheduler();
     }                                               //lascia in questo ordine per la priorità
-    else if(getCAUSE() && TIMERINTERRUPT)//line 2   interval timer interrupt
-        int address = get_numdevice(2);
+    else if(getCAUSE() && TIMERINTERRUPT){//line 2   interval timer interrupt
+        //100 millisecondi nell'interval timer
+        LDIT(PSECOND);
+
+        //sblocca i pcb in attesa di uno pseudo clock tick
+
+
+        //ritorna il controllo al current process
+        LDST((state_t *)BIOSDATAPAGE);
+
+        }
     else if(getCAUSE() && DISKINTERRUPT){//line 3
         NT_handler(3);
         int address = get_numdevice(3);
@@ -77,13 +86,19 @@ void endinterrupt(){
         scheduler ();
 }
 
+int MAXPNT(){ // ritorna la linea in cui si trova il NTI pending con priorità più alta
+    for (int line = 17; line < 8; line++){
+        if (getCAUSE() & (1 << line)){
+            return line;
+        }
+    }
+    return -1;
+}
 
-void NT_handler(int ip){
-    int line, numero, mask;
-    int status; // Declaration of status variable
-    int devAddrBase = get_numdevice(line);
-    status = get_status(devAddrBase);
-    set_status(ACK);
+
+
+void NT_handler(int line){
+    devAddrBase = 0x10000054 + ((line - 3) * 0x80) + (get_numdevice() * 0x10);
     /**
      * manda messaggio e sblocca il pcb in attes di questo device
      * aggiorna il registro v0 del pcb con status
@@ -92,30 +107,30 @@ void NT_handler(int ip){
     */
 }
 
+void passupordie(){
+    if(currentProcess->p_supportStruct == NULL){ // parte "die" del codice
+
+    }else{ //parte "pass up"
+
+    }
+}
+
 
 int get_numdevice(int line){
-    int devicenumber; // Declaration of devicenumber variable
     switch (line){
         case DEV1ON:
-            return 0x10000054 + ((1 - 3) * 0x80) + (devicenumber * 0x10);        
             break;
         case DEV2ON:
-            return 0x10000054 + ((2 - 3) * 0x80) + (devicenumber * 0x10);
             break;
         case DEV3ON:
-            return 0x10000054 + ((3 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         case DEV4ON:
-            return 0x10000054 + ((4 - 3) * 0x80) + (devicenumber* 0x10);       
             break;
         case DEV5ON:
-            return 0x10000054 + ((5 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         case DEV6ON:
-            return 0x10000054 + ((6 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         case DEV7ON:
-            return 0x10000054 + ((7 - 3) * 0x80) + (devicenumber * 0x10);       
             break;
         
     default:

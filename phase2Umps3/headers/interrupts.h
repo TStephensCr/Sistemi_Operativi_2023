@@ -15,9 +15,7 @@ extern cpu_t ultimo;
 int intconst[7];
 
 void interrupthandler();//funzioni abbastanza ovvie comunque sotto spiego cosa fanno
-void IT_handler();
 void NT_handler(int);//forse qui va qualcosa in input
-void PLT_handler();
 void startinterrupt();
 void endinterrupt();
 void get_deviceinterrupt(int *);
@@ -25,5 +23,7 @@ int get_numdevice(int);
 int get_status(int);
 void set_status(char);
 cpu_t tempopassato();
+void passupordie();
+int MAXPNT();
 
 #endif
