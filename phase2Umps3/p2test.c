@@ -18,6 +18,7 @@
 #include "../headers/const.h"
 #include "../headers/types.h"
 #include <umps/libumps.h>
+#include "./headers/initial.h"
 
 typedef unsigned int devregtr;
 
@@ -710,6 +711,7 @@ void p5a()
     /* generage a TLB exception after a TLB-Refill event */
     p5MemLocation = (memaddr *)0x80000000;
     *p5MemLocation = 42;
+    
 }
 
 /* second part of p5 - should be entered in user mode first time through */

@@ -10,8 +10,12 @@
 #include "/usr/include/umps3/umps/cp0.h"
 
 #include "./scheduler.h"
+#include "./exceptions.h"
+#include "./interrupts.h"
+#include "./ssi.h"
 
 extern void test ();
 extern void scheduler ();
+extern void exceptionHandler ();
 
 #endif

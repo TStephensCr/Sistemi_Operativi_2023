@@ -106,14 +106,14 @@ pcb_t *outChild(pcb_t *p) {
         return NULL;
     else{
         struct list_head *pos;
-        list_for_each(pos, &p->p_parent->p_child){
-            pcb_t *current= container_of(pos,pcb_t, p_sib);
+        list_for_each(pos, &p->p_parent->p_child){          //Gira per tutti i figli del padre, finché non troviamo p
+            pcb_t *current= container_of(pos,pcb_t,p_sib);
             if(current == p){
-                list_del(pos);
-                return p;
+                list_del(pos);                              //Eliminaimo p dai figli del padre
+                return p;                                   //Ritorniamo p
             }
         }
-        return NULL;
+        return NULL;        //Se p non era puntatao, torniamo NULL
     }
 }
 

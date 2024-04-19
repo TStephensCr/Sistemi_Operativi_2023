@@ -69,7 +69,7 @@ int main(void){
     passupvector_t *passupvect = (passupvector_t *)PASSUPVECTOR;
     passupvect->tlb_refill_handler = (memaddr)uTLB_RefillHandler;
     passupvect->exception_stackPtr = (memaddr)KERNELSTACK;
-    //passupvect->exception_handler = (memaddr)exceptionHandler;    //DEBUG: togliere commento quando exceptionHandler pronto
+    passupvect->exception_handler = (memaddr)exceptionHandler;
 
     passupvect->tlb_refill_stackPtr = (memaddr)KERNELSTACK;
 
