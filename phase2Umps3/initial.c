@@ -13,13 +13,6 @@ pcb_PTR currentProcess;                     //Current Process, punta al processo
 pcb_PTR blockedpcbs[SEMDEVLEN][2];          //idk va capito
 cpu_t ultimo;                               //ultimo TOD
 
-void uTLB_RefillHandler() {
-    setENTRYHI(0x80000000);
-    setENTRYLO(0x00000000);
-    TLBWR();
-    LDST((state_t*) 0x0FFFF000);
-}
-
 static void second_pcb(){
     pcb_PTR new_pcb = allocPcb();
     

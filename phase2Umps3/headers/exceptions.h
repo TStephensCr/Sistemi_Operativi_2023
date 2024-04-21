@@ -9,6 +9,9 @@ extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
 extern cpu_t ultimo;
 
+extern struct list_head pcbFree_h;
+
 void exceptionHandler();
+void uTLB_RefillHandler();
 
 #endif

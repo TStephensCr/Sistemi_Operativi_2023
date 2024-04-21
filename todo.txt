@@ -1,0 +1,50 @@
+SEZIONI:
+1
+Nucleus Initialization
+fatto da: Matteo
+stato: Finito, manca debug
+
+2
+Scheduler
+Thomas
+stato: Finito, manca debug
+
+3
+TLB-Refill events
+fatto da: Matteo
+stato: Finito, era già fatto
+
+4
+Exceptions
+fatto da: Matteo
+stato: Finito, manca debug
+
+5
+SYSCALL Exceptions
+fatto da: Matteo
+stato: Quasi finito, mancano 5.4 e 5.5 e un sacco di debug
+
+6
+SSI
+Thomas
+stato: idk
+
+7
+Nucleus Services
+idk
+stato: idk
+
+8
+Interrupt
+Gianluca
+stato: idk
+
+9
+Pass Up or Die
+Matteo
+Finito, manca debug
+
+10
+Accumulated CPU Time
+idk
+stato: idk

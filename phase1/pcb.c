@@ -117,5 +117,10 @@ pcb_t *outChild(pcb_t *p) {
     }
 }
 
-
-
+int pcbIsInList(pcb_PTR p, struct list_head *head) {
+    pcb_PTR ptr;
+    list_for_each_entry(ptr, head, p_list){
+        if(p == ptr) return 1;   //pcb trovato
+    }
+    return 0;   //pcb non trovato
+}
