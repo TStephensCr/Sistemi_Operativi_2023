@@ -29,7 +29,7 @@ cpu_t tempopassato(){
 void interrupthandler(){
     startinterrupt();
     if(getCAUSE() && LOCALTIMERINT){//line 1    plt interrupt FINITI
-        currentProcess->p_sib = EXCEPTION_STATE;
+        currentProcess->p_sib = (state_t *)BIOSDATAPAGE;//exception state
         currentProcess->p_time = TIMESLICE;
         insertProcQ(&readyQueue, currentProcess);
         currentProcess = NULL;
@@ -81,14 +81,14 @@ void endinterrupt(){
     setSTATUS (getSTATUS() || TEBITON);
     STCK (ultimo);
     if (currentProcess != NULL)
-        LDST (EXCEPTION_STATE);
+        LDST ((state_t *)BIOSDATAPAGE);
     else
         scheduler ();
 }
 
 int MAXPNT(){ // ritorna la linea in cui si trova il NTI pending con priorità più alta
-    for (int line = 17; line < 8; line++){
-        if (getCAUSE() & (1 << line)){
+    for (int line = 3; line < 8; line++){
+        if (getCAUSE() & (1 << line) & line != 5){ //i device alla line 5 sono gli ethernet devices e il nostro OS non avrà interazioni con internet quindi ez
             return line;
         }
     }
@@ -98,7 +98,12 @@ int MAXPNT(){ // ritorna la linea in cui si trova il NTI pending con priorità p
 
 
 void NT_handler(int line){
+    //1
     devAddrBase = 0x10000054 + ((line - 3) * 0x80) + (get_numdevice() * 0x10);
+    //2
+    //3
+    //4
+
     /**
      * manda messaggio e sblocca il pcb in attes di questo device
      * aggiorna il registro v0 del pcb con status
@@ -117,24 +122,11 @@ void passupordie(){
 
 
 int get_numdevice(int line){
-    switch (line){
-        case DEV1ON:
-            break;
-        case DEV2ON:
-            break;
-        case DEV3ON:
-            break;
-        case DEV4ON:
-            break;
-        case DEV5ON:
-            break;
-        case DEV6ON:
-            break;
-        case DEV7ON:
-            break;
-        
-    default:
-        break;
-    }
+    devregarea_t *area_registrobus = (devregarea_t *)BUS_REG_RAM_BASE;
+    unsigned int bitmap = bus_reg_area->interrupt_dev[EXT_IL_INDEX (line)];
+    for (int number = 0, mask = 1; number < N_DEV_PER_IL; number++, mask <<= 1)
+        if (bitmap & mask)
+            return number;
+    return -1;
     
 }

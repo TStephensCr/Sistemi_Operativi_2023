@@ -10,7 +10,6 @@ extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
 extern cpu_t ultimo;
 
-#define EXCEPTION_STATE = (state_t *)BIOSDATAPAGE;
 
 int intconst[7];
 
