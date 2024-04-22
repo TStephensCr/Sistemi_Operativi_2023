@@ -26,8 +26,6 @@ cpu_t tempopassato(){
 // in ogni linea controlla quale device ha un interrupt pending attraverso la interrupting device bit map
 // 
 void interrupthandler(){
-    
-
     for(int line = 1; line < 8 ; line++){
         startinterrupt();
         if(getCAUSE() & LOCALTIMERINT){//line 1    plt interrupt FINITI
