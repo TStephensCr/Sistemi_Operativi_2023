@@ -102,10 +102,24 @@ int MAXPNT(){ // ritorna la linea in cui si trova il NTI pending con priorità p
 
 void NT_handler(int line){
     //1
-    unsigned int devAddrBase = 0x10000054 + ((line - 3) * 0x80) + (get_numdevice(line) * 0x10);
+    int num = get_numdevice(line);
+    unsigned int devAddrBase = 0x10000054 + ((line - 3) * 0x80) + (num * 0x10);
     //2
+    devreg_t *devReg = &bus_reg_area->devreg[line - 3][num];
+    unsigned int status = devReg->dtp.status;
     //3
+    devReg->dtp.command = ACK;
     //4
+    pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num];
+
+    if(waitingProcess != NULL){
+        waitingProcess->p_s.v0 = status;
+        insertProcQ(&readyQueue,waitingProcess);
+    }
+    if(currentProcess==NULL)//finito
+        scheduler();
+    else                    //non finito
+        LDST((state_t*) BIOSDATAPAGE);
 
     /**
      * manda messaggio e sblocca il pcb in attes di questo device
@@ -121,7 +135,7 @@ void NT_handler(int line){
 int get_numdevice(int line){
     devregarea_t *bra = (devregarea_t *)BUS_REG_RAM_BASE;
     unsigned int bitmap = bra->interrupt_dev[EXT_IL_INDEX (line)];
-    for (int number = 0, mask = 1; number < N_DEV_PER_IL; number++, mask <<= 1)
+    for (int number = 0, mask = 1; number < 3; number++, mask <<= 1)
         if (bitmap & mask)
             return number;
     return -1;
