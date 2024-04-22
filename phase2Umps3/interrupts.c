@@ -26,46 +26,50 @@ cpu_t tempopassato(){
 // in ogni linea controlla quale device ha un interrupt pending attraverso la interrupting device bit map
 // 
 void interrupthandler(){
-    startinterrupt();
-    if(getCAUSE() & LOCALTIMERINT){//line 1    plt interrupt FINITI
-        currentProcess->p_sib = (state_t *)BIOSDATAPAGE;//exception state
-        currentProcess->p_time = TIMESLICE;//se da problemi prova ad assegnare il valore ad una variabile e poi assegnare la variabile
+    
 
-        insertProcQ(&readyQueue, currentProcess);
-        currentProcess = NULL;
-        scheduler();
-    }                                               //lascia in questo ordine per la priorità
-    else if(getCAUSE() & TIMERINTERRUPT){//line 2   interval timer interrupt
-        //100 millisecondi nell'interval timer
-        LDIT(PSECOND);
-        struct list_head* li;
-        //sblocca i pcb in attesa di uno pseudo clock tick
-        list_for_each(li, &PseudoClockWP){
-            pcb_t* oggetto = container_of(li,pcb_t,p_list);
-            insertProcQ(&readyQueue, oggetto);    
-            list_del(li);
-            softBlockCount--;// ?
+    for(int line = 1; line < 8 ; line++){
+        startinterrupt();
+        if(getCAUSE() & LOCALTIMERINT){//line 1    plt interrupt FINITI
+            currentProcess->p_sib = (state_t *)BIOSDATAPAGE;//exception state
+            currentProcess->p_time = TIMESLICE;//se da problemi prova ad assegnare il valore ad una variabile e poi assegnare la variabile
+
+            insertProcQ(&readyQueue, currentProcess);
+            currentProcess = NULL;
+            scheduler();
+        }                                               //lascia in questo ordine per la priorità
+        else if(getCAUSE() & TIMERINTERRUPT){//line 2   interval timer interrupt
+            //100 millisecondi nell'interval timer
+            LDIT(PSECOND);
+            struct list_head* li;
+            //sblocca i pcb in attesa di uno pseudo clock tick
+            list_for_each(li, &PseudoClockWP){
+                pcb_t* oggetto = container_of(li,pcb_t,p_list);
+                insertProcQ(&readyQueue, oggetto);    
+                list_del(li);
+                softBlockCount--;// ?
+            }
+            //ritorna il controllo al current process
+            LDST((state_t *)BIOSDATAPAGE);
+            }
+        else if(getCAUSE() & DISKINTERRUPT){//line 3
+            NT_handler(line);
+            int address = get_numdevice(3);
         }
-        //ritorna il controllo al current process
-        LDST((state_t *)BIOSDATAPAGE);
+        else if(getCAUSE() & FLASHINTERRUPT){//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
+            NT_handler(line);
+            int address = get_numdevice(4);
         }
-    else if(getCAUSE() & DISKINTERRUPT){//line 3
-        NT_handler(3);
-        int address = get_numdevice(3);
+        else if(getCAUSE() & PRINTINTERRUPT){// line 6
+            NT_handler(line);
+            int address = get_numdevice(6);
+        }
+        else if(getCAUSE() & TERMINTERRUPT){// line 7 per i terminal devices devi fare una roba diversa
+            NT_handler(line);
+            int address = get_numdevice(7);
+        }
+        endinterrupt();
     }
-    else if(getCAUSE() & FLASHINTERRUPT){//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
-        NT_handler(4);
-        int address = get_numdevice(4);
-    }
-    else if(getCAUSE() & PRINTINTERRUPT){// line 6
-        NT_handler(6);
-        int address = get_numdevice(6);
-    }
-    else if(getCAUSE() & TERMINTERRUPT){// line 7 per i terminal devices devi fare una roba diversa
-        NT_handler(7);
-        int address = get_numdevice(7);
-    }
-    endinterrupt();
 }
 
 
@@ -102,13 +106,11 @@ int MAXPNT(){ // ritorna la linea in cui si trova il NTI pending con priorità p
 
 void NT_handler(int line){
     //1
-    int num = get_numdevice(line);
     unsigned int devAddrBase = 0x10000054 + ((line - 3) * 0x80) + (num * 0x10);
     //2
-    devreg_t *devReg = &bus_reg_area->devreg[line - 3][num];
-    unsigned int status = devReg->dtp.status;
+    
     //3
-    devReg->dtp.command = ACK;
+    
     //4
     pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num];
 
