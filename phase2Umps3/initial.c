@@ -11,7 +11,9 @@ unsigned int softBlockCount;                //Soft-Block Count, numero di proces
 struct list_head readyQueue;                //Ready Queue, puntatore alla coda di porcessi in ready
 pcb_PTR currentProcess;                     //Current Process, punta al processo in running
 pcb_PTR blockedpcbs[SEMDEVLEN][2];          //idk va capito
-cpu_t ultimo;                               //ultimo TOD
+cpu_t ultimo;           
+struct list_head PseudoClockWP;      
+struct list_head p_list;              //ultimo TOD
 
 static void second_pcb(){
     pcb_PTR new_pcb = allocPcb();

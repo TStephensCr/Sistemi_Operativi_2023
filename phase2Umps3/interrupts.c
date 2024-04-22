@@ -5,7 +5,6 @@ extern unsigned int softBlockCount;
 extern struct list_head readyQueue;
 extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
-extern cpu_t ultimo;
 
 //interrupting device bitmap è una matrice di booleani in cui se c'è un 1 allora c'è un interrupt pending
 
@@ -28,37 +27,41 @@ cpu_t tempopassato(){
 // 
 void interrupthandler(){
     startinterrupt();
-    if(getCAUSE() && LOCALTIMERINT){//line 1    plt interrupt FINITI
+    if(getCAUSE() & LOCALTIMERINT){//line 1    plt interrupt FINITI
         currentProcess->p_sib = (state_t *)BIOSDATAPAGE;//exception state
-        currentProcess->p_time = TIMESLICE;
+        currentProcess->p_time = TIMESLICE;//se da problemi prova ad assegnare il valore ad una variabile e poi assegnare la variabile
+
         insertProcQ(&readyQueue, currentProcess);
         currentProcess = NULL;
         scheduler();
     }                                               //lascia in questo ordine per la priorità
-    else if(getCAUSE() && TIMERINTERRUPT){//line 2   interval timer interrupt
+    else if(getCAUSE() & TIMERINTERRUPT){//line 2   interval timer interrupt
         //100 millisecondi nell'interval timer
         LDIT(PSECOND);
-
+        struct list_head* li;
         //sblocca i pcb in attesa di uno pseudo clock tick
-
-
+        list_for_each(li, &PseudoClockWP){
+            pcb_t* oggetto = container_of(li,pcb_t,p_list);
+            insertProcQ(&readyQueue, oggetto);    
+            list_del(li);
+            softBlockCount--;// ?
+        }
         //ritorna il controllo al current process
         LDST((state_t *)BIOSDATAPAGE);
-
         }
-    else if(getCAUSE() && DISKINTERRUPT){//line 3
+    else if(getCAUSE() & DISKINTERRUPT){//line 3
         NT_handler(3);
         int address = get_numdevice(3);
     }
-    else if(getCAUSE() && FLASHINTERRUPT){//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
+    else if(getCAUSE() & FLASHINTERRUPT){//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
         NT_handler(4);
         int address = get_numdevice(4);
     }
-    else if(getCAUSE() && PRINTINTERRUPT){// line 6
+    else if(getCAUSE() & PRINTINTERRUPT){// line 6
         NT_handler(6);
         int address = get_numdevice(6);
     }
-    else if(getCAUSE() && TERMINTERRUPT){// line 7 per i terminal devices devi fare una roba diversa
+    else if(getCAUSE() & TERMINTERRUPT){// line 7 per i terminal devices devi fare una roba diversa
         NT_handler(7);
         int address = get_numdevice(7);
     }
@@ -73,7 +76,7 @@ void startinterrupt(){
   if(currentProcess != NULL){
     currentProcess->p_time += tempopassato();
   }
-  setSTATUS (getSTATUS() && ~TEBITON);
+  setSTATUS (getSTATUS() & ~TEBITON);
 }
 
 //fine interrupt e riprende il processo interrotto, se nullo chiama lo scheduler
@@ -99,7 +102,7 @@ int MAXPNT(){ // ritorna la linea in cui si trova il NTI pending con priorità p
 
 void NT_handler(int line){
     //1
-    devAddrBase = 0x10000054 + ((line - 3) * 0x80) + (get_numdevice() * 0x10);
+    unsigned int devAddrBase = 0x10000054 + ((line - 3) * 0x80) + (get_numdevice(line) * 0x10);
     //2
     //3
     //4
@@ -112,18 +115,12 @@ void NT_handler(int line){
     */
 }
 
-void passupordie(){
-    if(currentProcess->p_supportStruct == NULL){ // parte "die" del codice
 
-    }else{ //parte "pass up"
-
-    }
-}
 
 
 int get_numdevice(int line){
-    devregarea_t *area_registrobus = (devregarea_t *)BUS_REG_RAM_BASE;
-    unsigned int bitmap = bus_reg_area->interrupt_dev[EXT_IL_INDEX (line)];
+    devregarea_t *bra = (devregarea_t *)BUS_REG_RAM_BASE;
+    unsigned int bitmap = bra->interrupt_dev[EXT_IL_INDEX (line)];
     for (int number = 0, mask = 1; number < N_DEV_PER_IL; number++, mask <<= 1)
         if (bitmap & mask)
             return number;
