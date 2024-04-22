@@ -30,7 +30,12 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
         case 3:
         //DOIO
             ssi_do_io_t *do_io = (ssi_do_io_t *)ar;
+            //given the device address, the SSI should save the waiting pcb_t on the corresponding device; ??????????????????????????????????????????
+            unsigned int *commandAddr = do_io.commandAddr;
+            unsigned int commandValue = do_io.commandValue;
+            *commandAddr = commandValue;
 
+            //salvare pcb_t in blockedPCBs(indice sconosciuto) e aumentare softBlockCount
             break;
         case 4:
         //GETCPUTIME
@@ -59,12 +64,7 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
         //Terminate Process
             ar = (service == NULL) ? NULL : ar; //If service is null, the sender process must be terminated, regardless of the argument
             pcb_t tmp_pcb = (ar == NULL) ? sender : ar;//If the argument is null, the sender process must be terminated
-
-            do{
-                terminateProcess(tmp_pcb);
-                tmp_pcb = tmp_pcb->p_child;
-
-            }while()
+            terminateProcessTree(tmp_pcb);
 
             break;
     }
