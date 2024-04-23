@@ -35,7 +35,10 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
             unsigned int commandValue = do_io.commandValue;
             *commandAddr = commandValue;
 
-            //salvare pcb_t in blockedPCBs(indice sconosciuto) e aumentare softBlockCount
+            int term0dev = EXT_IL_INDEX(IL_TERMINAL) * N_DEV_PER_IL + 0;//va adattato per ogni device, invece che 0
+            blockedPCBs[term0dev] = sender;
+            softBlockCount++;
+
             break;
         case 4:
         //GETCPUTIME
@@ -44,7 +47,7 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
         case 5:
         //WaitForClock
             softBlockCount++;
-            //insertProcQ(...,sender);  manca queue waiting for clock penso
+            insertProcQ(&PseudoClockWP, sender);
             break;
         case 6:
         //GetSupportData
