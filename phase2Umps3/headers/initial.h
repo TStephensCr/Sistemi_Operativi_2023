@@ -9,6 +9,11 @@
 #include "/usr/include/umps3/umps/const.h"
 #include "/usr/include/umps3/umps/const.h"
 #include "/usr/include/umps3/umps/cp0.h"
+#include "/usr/include/umps3/umps/aouth.h"
+#include "/usr/include/umps3/umps/arch.h"
+#include "/usr/include/umps3/umps/bios_defs.h"
+#include "/usr/include/umps3/umps/regdef.h"
+#include "/usr/include/umps3/umps/types.h"
 
 #include "./scheduler.h"
 #include "./exceptions.h"
