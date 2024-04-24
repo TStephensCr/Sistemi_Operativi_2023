@@ -30,7 +30,6 @@ int get_numdevice(int);
 int get_status(int);
 void set_status(char);
 cpu_t tempopassato();
-void passupordie();
-int MAXPNT();
+static sbloccapcb(int, struct list_head){
 
 #endif

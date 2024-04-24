@@ -17,6 +17,15 @@ cpu_t tempopassato(){
     return risultante;
 }
 
+static sbloccapcb(int num, pcb_PTR blockedpcbs[SEMDEVLEN][2];){
+    pcb_t* tmp;
+    
+        if(tmp->dev_no == num)
+            return outProcQ(list, tmp);
+    
+
+}
+
 //DETERMINA CHE TIPO DI INTERRUPT è PENDING IN BASE ALLA LINEA
 //POI CONTROLLA GLI 8 DEVICE PER CAPIRE A QUALE APPARTIENE
 // QUALCOSA NOPN VA T.T     
@@ -91,37 +100,49 @@ void endinterrupt(){
         scheduler ();
 }
 
-int MAXPNT(){ // ritorna la linea in cui si trova il NTI pending con priorità più alta
-    for (int line = 3; line < 8; line++){
-        if (getCAUSE() & (1 << line) & line != 5){ //i device alla line 5 sono gli ethernet devices e il nostro OS non avrà interazioni con internet quindi ez
-            return line;
-        }
-    }
-    return -1;
-}
-
-
 
 void NT_handler(int line){
     //1
     int num = get_numdevice(line);
-    unsigned int devAddrBase = 0x10000054 + ((line - 3) * 0x80) + (num * 0x10);
-    //2
-    
-    //3
-    
-    //4
+    unsigned int dstatus;
     pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num];
 
-    if(waitingProcess != NULL){
-        waitingProcess->p_s.v0 = status;//status è da rivedere 
-        insertProcQ(&readyQueue,waitingProcess);
-    }
-    if(currentProcess==NULL)//finito
-        scheduler();
-    else                    //non finito
-        LDST((state_t*) BIOSDATAPAGE);
+    if (line!=7){ //per i device non terminali
+        //accedo al device register
+        dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
+        unsigned int dstatus = device_register->status;          //salvo lo status
+        device_register->commad = ACK//acknowledged
 
+
+
+    }else{ // device terminali
+
+        //gestione interrupt terminale --> 2 sub-devices
+        if(((device_register->transm_status) & 0x000000FF) == 5){ //ultimi 8 bit contengono il codice dello status
+            //output terminale
+            dstatus = device_register->transm_status;
+            device_register->transm_command = ACK;
+            waitingProces = sbloccapcb(num, &Locked_terminal_transm);
+        }
+        else{
+            //input terminale
+            dstatus = device_register->recv_status;
+            device_register->recv_command = ACK;
+            waitingProcess = sbloccapcb(num, &Locked_terminal_recv);
+        }
+    }
+
+    if(waitingProcess != NULL){
+        waitingProcess->p_s.v0 = dstatus; 
+        send(ssi_pcb, waitingProcess, (memaddr)(dstatus));
+        insertProcQ(&readyQueue,waitingProcess);
+        softBlockCount--;
+    }
+    
+    if(currentProcess==NULL)
+        scheduler();
+    else                    
+        LDST((state_t*) BIOSDATAPAGE);
     /**
      * manda messaggio e sblocca il pcb in attes di questo device
      * aggiorna il registro v0 del pcb con status
@@ -131,19 +152,19 @@ void NT_handler(int line){
 }
 
 
-
+//questa funzione ui sotto non solo mi ritorna il device con un pending interrupt in quella line ma mi ritorna 
+//quello con più priorità quindi poi lo passo al NTHANDLER già gestito
+//inoltre posso lasciare la bitmap qui dentro e chillarmela
 
 int get_numdevice(int line){
      devregarea_t *dra = (devregarea_t *)BUS_REG_RAM_BASE;
     //accedo alla bitmap dei device per la linea su cui è stato rilevato un interrupt
     unsigned int intdevbitmap = dra->interrupt_dev[line - 3];
-    unsigned int dstatus;
     unsigned int dnumber;
     for(int i = 0; i<8;i++){
         if(intdevbitmap & intconst[i]){
             dnumber = i;
-        
         }
     }
-    
+    return dnumber;
 }

@@ -37,7 +37,7 @@ stato: manca DOIO
 8
 Interrupt
 Gianluca
-stato: idk
+manca poco
 
 9
 Pass Up or Die
