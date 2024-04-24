@@ -27,12 +27,12 @@ stato: Quasi finito, mancano 5.4 e 5.5 e un sacco di debug
 6
 SSI
 Thomas
-stato: idk
+stato: non c'era molto da fare, finito
 
 7
 Nucleus Services
 idk
-stato: idk
+stato: manca DOIO
 
 8
 Interrupt

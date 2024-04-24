@@ -24,49 +24,67 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
             
             insertChild(sender, newProcess);//The process tree field (e.g. p_sib) by the call to insertChild.
             
-            //return control to the current process
-            LDST(&currentProcess->p_s)
+            LDST(&currentProcess->p_s)//return control to the current process
             break;
         case 3:
         //DOIO
-            ssi_do_io_t *do_io = (ssi_do_io_t *)ar;
-            //given the device address, the SSI should save the waiting pcb_t on the corresponding device; ??????????????????????????????????????????
-            unsigned int *commandAddr = do_io.commandAddr;
-            unsigned int commandValue = do_io.commandValue;
-            *commandAddr = commandValue;
 
-            int term0dev = EXT_IL_INDEX(IL_TERMINAL) * N_DEV_PER_IL + 0;//va adattato per ogni device, invece che 0
-            blockedPCBs[term0dev] = sender;
+            ssi_do_io_t *do_io = (ssi_do_io_t *)ar;//do_io struct passed as argument
+
+            unsigned int *commandAddr = do_io->commandAddr;
+
+            unsigned int commandValue = do_io.commandValue;
+
+            findDeviceNum(commandAddr, sender);//finding device number and saving it to sender pcb
+
+            *commandAddr = commandValue;//the SSI will write the requested value on the device
+
+            int devIndex = EXT_IL_INDEX(IL_TERMINAL) * N_DEV_PER_IL + sender.device_num;
+            blockedPCBs[devIndex] = sender;//the process will wait for a response from the SSI
             softBlockCount++;
 
             break;
         case 4:
         //GETCPUTIME
+
             ar = &(sender->p_time);
+
             break;
         case 5:
         //WaitForClock
+
             softBlockCount++;
+
             insertProcQ(&PseudoClockWP, sender);
+
             break;
         case 6:
         //GetSupportData
+
             ar = sender->p_supportStruct;
+
             break;
         case 7:
         //GetProcessID
-            if(ar == 0){
+
+            if(ar == 0){//return sender's PID if argument is 0
                 ar = &(sender->p_pid);
                 break;
             }
-            if(sender->p_parent != NULL)
+
+            if(sender->p_parent != NULL)//return sender's parent's PID otherwise
                 ar = &(sender->p_parent->p_pid);
-            else ar = 0;
+
+            else ar = 0;//return 0 if sender is root and argument is not 0
+
             break;
         default:
         //Terminate Process
+
             ar = (service == NULL) ? NULL : ar; //If service is null, the sender process must be terminated, regardless of the argument
+
             pcb_t tmp_pcb = (ar == NULL) ? sender : ar;//If the argument is null, the sender process must be terminated
+
             terminateProcessTree(tmp_pcb);
 
             break;
@@ -126,5 +144,22 @@ void terminateProcess(pcb_t* process){
 
     if(blocked) softBlockCount--;
 
+}
+
+static void findDeviceNum(memaddr commandAddr, pcb_t *p){
+    for (int i = 3; i < 8; i++){
+        for (int k = 0; k < 8; k++){ 
+
+            dtpreg_t *baseAddr = (dtpreg_t *)DEV_REG_ADDR(i, k);
+            if(command_address == (memaddr)(base_address.command) ){//forse serve & su command
+                p.device_num = k;
+                return;
+            }else if(i == 7 && command_address == (memaddr)(base_address.command)){
+                p.device_num =  k;
+                return;
+            }
+
+        }  
+    }
 }
 
