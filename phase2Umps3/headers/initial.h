@@ -1,6 +1,7 @@
 #ifndef INITIAL_H_INCLUDED
 #define INITIAL_H_INCLUDED
 
+/* DEBUG: SARANNO DA TOGLIERE I COMMENTI DA QUESTE E DA CANCELLARE LE LIBRERIE SOTTO, OLTRE A CANCELLARE LA CARTELLA LIBRERIE */
 /*#include "/usr/include/umps3/umps/libumps.h"
 #include "/usr/include/umps3/umps/const.h"
 #include "/usr/include/umps3/umps/const.h"
