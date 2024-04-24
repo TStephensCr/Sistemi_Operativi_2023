@@ -5,7 +5,7 @@ extern unsigned int softBlockCount;
 extern struct list_head readyQueue;
 extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
-
+unsigned int *intLaneMapped = (memaddr*)(INTDEVBITMAP + (0x4 * (line - 3)))
 //interrupting device bitmap è una matrice di booleani in cui se c'è un 1 allora c'è un interrupt pending
 
 //tempo che serve a svolgere  il processo
@@ -39,14 +39,14 @@ void interrupthandler(){
         else if(getCAUSE() & TIMERINTERRUPT){//line 2   interval timer interrupt
             //100 millisecondi nell'interval timer
             LDIT(PSECOND);
-            struct list_head* li;
-            //sblocca i pcb in attesa di uno pseudo clock tick
-            list_for_each(li, &PseudoClockWP){
-                pcb_t* oggetto = container_of(li,pcb_t,p_list);
-                insertProcQ(&readyQueue, oggetto);    
-                list_del(li);
-                softBlockCount--;// ?
+            pcb_t *unblocked_pcb;
+            while ((unblocked_pcb = removeProcQ(&PseudoClockWP)) != NULL) {
+            //sblocco di tutti i processi in attesa dello pseudoclock
+                send(ssi_pcb, unblocked_pcb, 0);
+                insertProcQ(&readyQueue, unblocked_pcb);
+                softBlockCount--;
             }
+
             //ritorna il controllo al current process
             LDST((state_t *)BIOSDATAPAGE);
             }
@@ -104,6 +104,7 @@ int MAXPNT(){ // ritorna la linea in cui si trova il NTI pending con priorità p
 
 void NT_handler(int line){
     //1
+    int num = get_numdevice(line);
     unsigned int devAddrBase = 0x10000054 + ((line - 3) * 0x80) + (num * 0x10);
     //2
     
@@ -113,7 +114,7 @@ void NT_handler(int line){
     pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num];
 
     if(waitingProcess != NULL){
-        waitingProcess->p_s.v0 = status;
+        waitingProcess->p_s.v0 = status;//status è da rivedere 
         insertProcQ(&readyQueue,waitingProcess);
     }
     if(currentProcess==NULL)//finito
@@ -133,11 +134,16 @@ void NT_handler(int line){
 
 
 int get_numdevice(int line){
-    devregarea_t *bra = (devregarea_t *)BUS_REG_RAM_BASE;
-    unsigned int bitmap = bra->interrupt_dev[EXT_IL_INDEX (line)];
-    for (int number = 0, mask = 1; number < 3; number++, mask <<= 1)
-        if (bitmap & mask)
-            return number;
-    return -1;
+     devregarea_t *dra = (devregarea_t *)BUS_REG_RAM_BASE;
+    //accedo alla bitmap dei device per la linea su cui è stato rilevato un interrupt
+    unsigned int intdevbitmap = dra->interrupt_dev[line - 3];
+    unsigned int dstatus;
+    unsigned int dnumber;
+    for(int i = 0; i<8;i++){
+        if(intdevbitmap & intconst[i]){
+            dnumber = i;
+        
+        }
+    }
     
 }

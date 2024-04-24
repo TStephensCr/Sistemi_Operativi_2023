@@ -6,6 +6,7 @@ MANCA: (DEBUG)
 7 (RAMTOP)
 7.1
 */
+
 unsigned int processCount=0;                  //Process Count, numero di processi attivi e non terminati
 unsigned int softBlockCount;                //Soft-Block Count, numero di processi in waiting per I/O o per tempo esaurito
 struct list_head readyQueue;                //Ready Queue, puntatore alla coda di porcessi in ready
