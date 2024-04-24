@@ -35,12 +35,18 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
 
             unsigned int commandValue = do_io.commandValue;
 
-            findDeviceNum(commandAddr, sender);//finding device number and saving it to sender pcb
+            unsigned int device_num;
+
+            unsigned int device_line;
+
+            findDeviceNum(commandAddr, sender, device_num, device_line);//finding device number and saving it to sender pcb
 
             *commandAddr = commandValue;//the SSI will write the requested value on the device
 
-            int devIndex = EXT_IL_INDEX(IL_TERMINAL) * N_DEV_PER_IL + sender.device_num;
+            int devIndex = EXT_IL_INDEX(device_line) * N_DEV_PER_IL + device_num;
+
             blockedPCBs[devIndex] = sender;//the process will wait for a response from the SSI
+
             softBlockCount++;
 
             break;
@@ -94,11 +100,12 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
 void remoteProcedureCall(){
     while(TRUE){
         ssi_payload_t payload;
+
         //receive request
         int sender = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)(&payload), 0);
 
         //satisfy request
-        SSIRequest((pcb_t*)sender, payload.service_code, payload.arg);//dubbio: forse vanno create variabili invece che passare direttamente cosi?
+        SSIRequest((pcb_t*)sender, payload.service_code, payload.arg);//dubbio: forse vanno create variabili invece che passare direttamente 
 
         //send back results
         SYSCALL(SENDMESSAGE, sender, (unsigned int)(ar), 0);
@@ -114,9 +121,11 @@ void terminateProcessTree(pcb_t *process) {
 
     // Traverse through children
     pcb_t *child = process->p_child;
+
     while (child != NULL) {
         // Recursion call on children
         terminateProcessTree(child);
+
         child = child->p_sibling; // Call for each sibling
     }
 }
@@ -129,9 +138,13 @@ void terminateProcess(pcb_t* process){
     int blocked = FALSE;
 
     for(int i = 0; i < SEMDEVLEN; i++){
+
         if(blockedpcbs[i] == process){
+
             blockedpcbs[i] = NULL;
+
             blocked = TRUE;
+
             break;
         }
     }
@@ -146,20 +159,26 @@ void terminateProcess(pcb_t* process){
 
 }
 
-static void findDeviceNum(memaddr commandAddr, pcb_t *p){
+static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int &device_num, unsigned int &device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
     for (int i = 3; i < 8; i++){
         for (int k = 0; k < 8; k++){ 
 
-            dtpreg_t *baseAddr = (dtpreg_t *)DEV_REG_ADDR(i, k);
+            dtpreg_t *baseAddr = (dtpreg_t *)DEV_REG_ADDR(i, k);//base address for device
+
             if(command_address == (memaddr)(base_address.command) ){//forse serve & su command
-                p.device_num = k;
+
+                device_num = k;
+                device_line = i;
+
                 return;
             }else if(i == 7 && command_address == (memaddr)(base_address.command)){
-                p.device_num =  k;
+
+                device_num = k;
+                device_line = i;
+                
                 return;
             }
 
         }  
     }
 }
-
