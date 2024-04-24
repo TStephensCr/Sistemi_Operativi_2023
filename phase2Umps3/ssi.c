@@ -1,13 +1,84 @@
 #include "/usr/include/umps3/umps/libumps.h"
 #include "./headers/ssi.h"
 
+void terminateProcessTree(pcb_t *process) {
+    if (process == NULL)
+        return;
+
+    // Terminate the current process
+    terminateProcess(process);
+
+    // Traverse through children
+    pcb_t *child = process->p_child;//VA PASSATA LA PCB NON LA LISTA
+
+    while (child != NULL) {
+        // Recursion call on children
+        terminateProcessTree(child);
+
+        child = child->p_sibling; // Call for each sibling
+    }
+}
+
+void terminateProcess(pcb_t* process){
+
+    outChild(process);
+
+    //If a terminated process is waiting for the completion of a DoIO, the value used to track this should be adjusted accordingly. 
+    int blocked = FALSE;
+
+    for(int i = 0; i < SEMDEVLEN; i++){
+
+        if(blockedpcbs[i] == process){
+
+            blockedpcbs[i] = NULL;
+
+            blocked = TRUE;
+
+            break;
+        }
+    }
+
+    //If a terminated process is waiting for clock, the value used to track this should be adjusted accordingly.
+    if(outProcQ(&PseudoClockWP, process))
+        blocked = TRUE;
+
+    processCount--;
+
+    if(blocked) softBlockCount--;
+
+}
+
+static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int &device_num, unsigned int &device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
+    for (int i = 3; i < 8; i++){
+        for (int k = 0; k < 8; k++){ 
+
+            dtpreg_t *baseAddr = (dtpreg_t *)DEV_REG_ADDR(i, k);//base address for device
+
+            if(command_address == (memaddr)(base_address.command) ){//forse serve & su command
+
+                device_num = k;
+                device_line = i;
+
+                return;
+            }else if(i == 7 && command_address == (memaddr)(base_address.command)){
+
+                device_num = k;
+                device_line = i;
+                
+                return;
+            }
+
+        }  
+    }
+}
+
 void SSIRequest(pcb_t* sender, int service, void* ar){
     switch(service){
         case 1:
         //CreateProcess
             //check resources availability
-            if(emptyProcQ(&freePcb)){
-                ar = &(NOPROC);
+            if(emptyProcQ(&pcbFree_h)){
+                ar = (void*)NOPROC;
             }
 
             //initialize new process
@@ -24,7 +95,7 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
             
             insertChild(sender, newProcess);//The process tree field (e.g. p_sib) by the call to insertChild.
             
-            LDST(&currentProcess->p_s)//return control to the current process
+            LDST(&currentProcess->p_s);//return control to the current process
             break;
         case 3:
         //DOIO
@@ -33,7 +104,7 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
 
             unsigned int *commandAddr = do_io->commandAddr;
 
-            unsigned int commandValue = do_io.commandValue;
+            unsigned int commandValue = do_io->commandValue;
 
             unsigned int device_num;
 
@@ -109,76 +180,5 @@ void remoteProcedureCall(){
 
         //send back results
         SYSCALL(SENDMESSAGE, sender, (unsigned int)(ar), 0);
-    }
-}
-
-void terminateProcessTree(pcb_t *process) {
-    if (process == NULL)
-        return;
-
-    // Terminate the current process
-    terminateProcess(process);
-
-    // Traverse through children
-    pcb_t *child = process->p_child;
-
-    while (child != NULL) {
-        // Recursion call on children
-        terminateProcessTree(child);
-
-        child = child->p_sibling; // Call for each sibling
-    }
-}
-
-void terminateProcess(pcb_t* process){
-
-    outChild(process);
-
-    //If a terminated process is waiting for the completion of a DoIO, the value used to track this should be adjusted accordingly. 
-    int blocked = FALSE;
-
-    for(int i = 0; i < SEMDEVLEN; i++){
-
-        if(blockedpcbs[i] == process){
-
-            blockedpcbs[i] = NULL;
-
-            blocked = TRUE;
-
-            break;
-        }
-    }
-
-    //If a terminated process is waiting for clock, the value used to track this should be adjusted accordingly.
-    if(outProcQ(&PseudoClockWP, process))
-        blocked = TRUE;
-
-    processCount--;
-
-    if(blocked) softBlockCount--;
-
-}
-
-static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int &device_num, unsigned int &device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
-    for (int i = 3; i < 8; i++){
-        for (int k = 0; k < 8; k++){ 
-
-            dtpreg_t *baseAddr = (dtpreg_t *)DEV_REG_ADDR(i, k);//base address for device
-
-            if(command_address == (memaddr)(base_address.command) ){//forse serve & su command
-
-                device_num = k;
-                device_line = i;
-
-                return;
-            }else if(i == 7 && command_address == (memaddr)(base_address.command)){
-
-                device_num = k;
-                device_line = i;
-                
-                return;
-            }
-
-        }  
     }
 }
