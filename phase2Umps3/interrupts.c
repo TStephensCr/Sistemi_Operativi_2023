@@ -5,7 +5,6 @@ extern unsigned int softBlockCount;
 extern struct list_head readyQueue;
 extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
-unsigned int *intLaneMapped = (memaddr*)(INTDEVBITMAP + (0x4 * (line - 3)))
 //interrupting device bitmap è una matrice di booleani in cui se c'è un 1 allora c'è un interrupt pending
 
 //tempo che serve a svolgere  il processo
@@ -17,14 +16,34 @@ cpu_t tempopassato(){
     return risultante;
 }
 
-static sbloccapcb(int num, pcb_PTR blockedpcbs[SEMDEVLEN][2];){
-    pcb_t* tmp;
-    
-        if(tmp->dev_no == num)
-            return outProcQ(list, tmp);
-    
+void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN][2], struct list_head *readyQueue) {
+    // Calculate the index of the device in the blockedpcbs array
+    int devIndex = EXT_IL_INDEX(interruptLine) * N_DEV_PER_IL + deviceNum;
 
+    // Check bounds to avoid potential out-of-bounds access
+    if (devIndex >= 0 && devIndex < SEMDEVLEN) {
+        // Get the PCB pointers from the blockedpcbs array
+        pcb_t *pcb1 = blockedpcbs[devIndex][0];
+        pcb_t *pcb2 = blockedpcbs[devIndex][1];
+
+        // Remove the PCBs from the blocked queue
+        if (pcb1 != NULL) {
+            removeBlocked(pcb1);
+        }
+        if (pcb2 != NULL) {
+            removeBlocked(pcb2);
+        }
+
+        // Insert the PCBs into the ready queue
+        if (pcb1 != NULL) {
+            insertProcQ(readyQueue, pcb1);
+        }
+        if (pcb2 != NULL) {
+            insertProcQ(readyQueue, pcb2);
+        }
+    }
 }
+
 
 //DETERMINA CHE TIPO DI INTERRUPT è PENDING IN BASE ALLA LINEA
 //POI CONTROLLA GLI 8 DEVICE PER CAPIRE A QUALE APPARTIENE
@@ -122,13 +141,13 @@ void NT_handler(int line){
             //output terminale
             dstatus = device_register->transm_status;
             device_register->transm_command = ACK;
-            waitingProces = sbloccapcb(num, &Locked_terminal_transm);
+            waitingProces = sbloccapcb(num, blockedpcbs);
         }
         else{
             //input terminale
             dstatus = device_register->recv_status;
             device_register->recv_command = ACK;
-            waitingProcess = sbloccapcb(num, &Locked_terminal_recv);
+            waitingProcess = sbloccapcb(num, blockedpcbs);
         }
     }
 
