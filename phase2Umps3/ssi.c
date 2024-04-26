@@ -1,24 +1,6 @@
 #include "/usr/include/umps3/umps/libumps.h"
 #include "./headers/ssi.h"
 
-void terminateProcessTree(pcb_t *process) {
-    if (process == NULL)
-        return;
-
-    // Terminate the current process
-    terminateProcess(process);
-
-    // Traverse through children
-    pcb_t *child = process->p_child;//VA PASSATA LA PCB NON LA LISTA
-
-    while (child != NULL) {
-        // Recursion call on children
-        terminateProcessTree(child);
-
-        child = child->p_sibling; // Call for each sibling
-    }
-}
-
 void terminateProcess(pcb_t* process){
 
     outChild(process);
@@ -28,9 +10,9 @@ void terminateProcess(pcb_t* process){
 
     for(int i = 0; i < SEMDEVLEN; i++){
 
-        if(blockedpcbs[i] == process){
+        if(blockedpcbs[i] == process){//questo cast non va bene per qualche motivo
 
-            blockedpcbs[i] = NULL;
+            blockedpcbs[i] = NULL;//questa assegnazione non va bene per qualche motivo
 
             blocked = TRUE;
 
@@ -48,7 +30,25 @@ void terminateProcess(pcb_t* process){
 
 }
 
-static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int &device_num, unsigned int &device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
+void terminateProcessTree(pcb_t *process) {
+    if (process == NULL)
+        return;
+
+    // Terminate the current process
+    terminateProcess(process);
+
+    // Traverse through children
+    pcb_t *child = headProcQ(process->p_child);//non gli va bene questo argomento
+
+    while (child != NULL) {
+        // Recursion call on children
+        terminateProcessTree(child);
+
+        child = child->p_sibling; // Call for each sibling
+    }
+}
+
+static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsigned int *device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
     for (int i = 3; i < 8; i++){
         for (int k = 0; k < 8; k++){ 
 
@@ -110,7 +110,7 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
 
             unsigned int device_line;
 
-            findDeviceNum(commandAddr, sender, device_num, device_line);//finding device number and saving it to sender pcb
+            findDeviceNum(commandAddr, sender, &device_num, &device_line);//finding device number and saving it to sender pcb
 
             *commandAddr = commandValue;//the SSI will write the requested value on the device
 
