@@ -5,6 +5,7 @@ extern unsigned int softBlockCount;
 extern struct list_head readyQueue;
 extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
+extern pcb_t ssi_pcb;
 //interrupting device bitmap è una matrice di booleani in cui se c'è un 1 allora c'è un interrupt pending
 
 //tempo che serve a svolgere  il processo
@@ -57,11 +58,11 @@ void interrupthandler(){
     for(int line = 1; line < 8 ; line++){
         startinterrupt();
         if(getCAUSE() & LOCALTIMERINT){//line 1    plt interrupt FINITI
-            currentProcess->p_sib = (state_t *)BIOSDATAPAGE;//exception state
-            currentProcess->p_time = TIMESLICE;//se da problemi prova ad assegnare il valore ad una variabile e poi assegnare la variabile
-
+            setTIMER(-1); //ACK interrupt
+            currentProcess->p_time += tempopassato();
+            state_t *exceptionstate = (state_t* )BIOSDATAPAGE;
+            saveState(&(currentProcess->p_s), exceptionstate);
             insertProcQ(&readyQueue, currentProcess);
-            currentProcess = NULL;
             scheduler();
         }                                               //lascia in questo ordine per la priorità
         else if(getCAUSE() & TIMERINTERRUPT){//line 2   interval timer interrupt
@@ -130,7 +131,7 @@ void NT_handler(int line){
         //accedo al device register
         dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
         unsigned int dstatus = device_register->status;          //salvo lo status
-        device_register->commad = ACK//acknowledged
+        device_register->command = ACK//acknowledged
 
 
 

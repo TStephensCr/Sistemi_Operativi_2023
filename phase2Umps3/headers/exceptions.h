@@ -11,6 +11,7 @@ extern cpu_t ultimo;
 
 extern struct list_head pcbFree_h;
 
+void saveState(state_t* new_state, state_t* old_state);
 void exceptionHandler();
 void uTLB_RefillHandler();
 

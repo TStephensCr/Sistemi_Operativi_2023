@@ -9,6 +9,19 @@ void uTLB_RefillHandler() {
     LDST((state_t*) 0x0FFFF000);
 }
 
+//salvataggio dello stato
+void saveState(state_t* dest, state_t* to_copy) {
+    //copia di tutti i parametri di uno stato nell'altro
+    dest->entry_hi = to_copy->entry_hi;
+    dest->cause = to_copy->cause;
+    dest->status = to_copy->status;
+    dest->pc_epc = to_copy->pc_epc;
+    for(int i = 0; i < STATE_GPR_LEN; i++) 
+        dest->gpr[i] = to_copy->gpr[i];
+    dest->hi = to_copy->hi;
+    dest->lo = to_copy->lo;
+}
+
 static void die(pcb_PTR p){
     while(emptyChild(p)==0){
         pcb_PTR son = removeChild(p);
