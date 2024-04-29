@@ -10,9 +10,9 @@ extern pcb_t ssi_pcb;
 
 //tempo che serve a svolgere  il processo
 cpu_t tempopassato(){
-    cpu_t attuale;
+    int attuale;
     STCK(attuale);
-    cpu_t risultante = attuale - ultimo;
+    int risultante = attuale - ultimo;
     STCK (ultimo);
     return risultante;
 }
@@ -142,7 +142,7 @@ void NT_handler(int line){
             //output terminale
             dstatus = device_register->transm_status;
             device_register->transm_command = ACK;
-            waitingProces = sbloccapcb(num, blockedpcbs);
+            waitingProcess = sbloccapcb(num, blockedpcbs);
         }
         else{
             //input terminale
