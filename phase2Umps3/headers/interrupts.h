@@ -8,11 +8,11 @@ extern unsigned int softBlockCount;
 extern struct list_head readyQueue;
 extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
-extern pcb_t ultimo;
+extern int ultimo;
 
 
 
-int intconst[7] = { 0x00000001,//device 0
+int intconst[8] = { 0x00000001,//device 0
                     0x00000002,//device 1
                     0x00000004,//device 2
                     0x00000008,//device 3
@@ -30,6 +30,6 @@ int get_numdevice(int);
 int get_status(int);
 void set_status(char);
 cpu_t tempopassato();
-static void sbloccapcb(int,int, pcb_PTR);
+void sbloccapcb(int,int, pcb_PTR);
 
 #endif

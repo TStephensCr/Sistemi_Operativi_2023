@@ -181,7 +181,7 @@ int get_numdevice(int line){
     //accedo alla bitmap dei device per la linea su cui è stato rilevato un interrupt
     unsigned int intdevbitmap = dra->interrupt_dev[line - 3];
     unsigned int dnumber;
-    for(int i = 0; i<8;i++){
+    for(int i = 0; i<=8;i++){
         if(intdevbitmap & intconst[i]){
             dnumber = i;
         }
