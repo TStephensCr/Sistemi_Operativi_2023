@@ -30,6 +30,6 @@ int get_numdevice(int);
 int get_status(int);
 void set_status(char);
 cpu_t tempopassato();
-static sbloccapcb(int, struct list_head){
+static sbloccapcb(int, struct list_head);
 
 #endif

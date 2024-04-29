@@ -9,14 +9,17 @@ void terminateProcess(pcb_t* process){
     int blocked = FALSE;
 
     for(int i = 0; i < SEMDEVLEN; i++){
+        for(int j = 0; j < 2; j++){
 
-        if(blockedpcbs[i] == process){//questo cast non va bene per qualche motivo
+            if(blockedpcbs[i][j] == (pcb_PTR)process){//questo cast non va bene per qualche motivo
 
-            blockedpcbs[i] = NULL;//questa assegnazione non va bene per qualche motivo
+                blockedpcbs[i][j] = NULL;//questa assegnazione non va bene per qualche motivo
 
-            blocked = TRUE;
+                blocked = TRUE;
 
-            break;
+                break;
+            }
+
         }
     }
 
@@ -48,22 +51,22 @@ void terminateProcessTree(pcb_t *process) {
     }
 }
 
-static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsigned int *device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
+void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsigned int *device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
     for (int i = 3; i < 8; i++){
         for (int k = 0; k < 8; k++){ 
 
             dtpreg_t *baseAddr = (dtpreg_t *)DEV_REG_ADDR(i, k);//base address for device
 
-            if(command_address == (memaddr)(base_address.command) ){//forse serve & su command
+            if(commandAddr == (memaddr)(baseAddr->command) ){//forse serve & su command
 
-                device_num = k;
-                device_line = i;
+                device_num = (unsigned int)k;
+                device_line = (unsigned int)i;
 
                 return;
-            }else if(i == 7 && command_address == (memaddr)(base_address.command)){
+            }else if(i == 7 && commandAddr == (memaddr)(baseAddr->command)){
 
-                device_num = k;
-                device_line = i;
+                device_num = (unsigned int)k;
+                device_line = (unsigned int)i;
                 
                 return;
             }
