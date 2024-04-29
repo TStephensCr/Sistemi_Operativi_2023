@@ -17,7 +17,7 @@ cpu_t tempopassato(){
     return risultante;
 }
 
-void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN][2], struct list_head *readyQueue) {
+void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
     // Calculate the index of the device in the blockedpcbs array
     int devIndex = EXT_IL_INDEX(interruptLine) * N_DEV_PER_IL + deviceNum;
 
