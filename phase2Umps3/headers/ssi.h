@@ -3,6 +3,8 @@
 
 #include "./initial.h"
 
+extern struct list_head PseudoClockWP;
+
 void terminateProcess(pcb_t* process);
 
 void terminateProcessTree(pcb_t* process);
