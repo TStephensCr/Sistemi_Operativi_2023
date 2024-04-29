@@ -11,9 +11,9 @@ void terminateProcess(pcb_t* process){
     for(int i = 0; i < SEMDEVLEN; i++){
         for(int j = 0; j < 2; j++){
 
-            if(blockedpcbs[i][j] == (pcb_PTR)process){//questo cast non va bene per qualche motivo
+            if(blockedpcbs[i][j] == (pcb_PTR)process){
 
-                blockedpcbs[i][j] = NULL;//questa assegnazione non va bene per qualche motivo
+                blockedpcbs[i][j] = NULL;
 
                 blocked = TRUE;
 
@@ -41,13 +41,13 @@ void terminateProcessTree(pcb_t *process) {
     terminateProcess(process);
 
     // Traverse through children
-    pcb_t *child = headProcQ(process->p_child);//non gli va bene questo argomento
+    pcb_t *child = headProcQ(&process->p_child);//non gli va bene questo argomento
 
     while (child != NULL) {
         // Recursion call on children
         terminateProcessTree(child);
 
-        child = child->p_sibling; // Call for each sibling
+        child = headProcQ(&child->p_sib); // Call for each sibling
     }
 }
 
@@ -59,14 +59,14 @@ void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsi
 
             if(commandAddr == (memaddr)(baseAddr->command) ){//forse serve & su command
 
-                device_num = (unsigned int)k;
-                device_line = (unsigned int)i;
+                device_num = (unsigned int*)k;
+                device_line = (unsigned int*)i;
 
                 return;
             }else if(i == 7 && commandAddr == (memaddr)(baseAddr->command)){
 
-                device_num = (unsigned int)k;
-                device_line = (unsigned int)i;
+                device_num = (unsigned int*)k;
+                device_line = (unsigned int*)i;
                 
                 return;
             }
@@ -88,7 +88,7 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
 
             pcb_t *newProcess = allocPcb();
 
-            newProcess->p_s = *ar->state;//p_s from arg->state.
+            newProcess->p_s = &ar->state;//p_s from arg->state.
 
             newProcess->p_supportStruct = *ar->support;//p_supportStruct from arg->support. If no parameter is provided, this field is set to NULL.
             
@@ -113,13 +113,13 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
 
             unsigned int device_line;
 
-            findDeviceNum(commandAddr, sender, &device_num, &device_line);//finding device number and saving it to sender pcb
+            findDeviceNum((memaddr)commandAddr, sender, &device_num, &device_line);//finding device number and saving it to sender pcb
 
             *commandAddr = commandValue;//the SSI will write the requested value on the device
 
             int devIndex = EXT_IL_INDEX(device_line) * N_DEV_PER_IL + device_num;
 
-            blockedPCBs[devIndex] = sender;//the process will wait for a response from the SSI
+            blockedpcbs[devIndex] = sender;//the process will wait for a response from the SSI
 
             softBlockCount++;
 
@@ -161,9 +161,9 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
         default:
         //Terminate Process
 
-            ar = (service == NULL) ? NULL : ar; //If service is null, the sender process must be terminated, regardless of the argument
+            ar = (service) ? NULL : ar; //If service is null, the sender process must be terminated, regardless of the argument
 
-            pcb_t tmp_pcb = (ar == NULL) ? sender : ar;//If the argument is null, the sender process must be terminated
+            pcb_t *tmp_pcb = (ar == NULL) ? sender : ar;//If the argument is null, the sender process must be terminated
 
             terminateProcessTree(tmp_pcb);
 
@@ -182,6 +182,6 @@ void remoteProcedureCall(){
         SSIRequest((pcb_t*)sender, payload.service_code, payload.arg);//dubbio: forse vanno create variabili invece che passare direttamente 
 
         //send back results
-        SYSCALL(SENDMESSAGE, sender, (unsigned int)(ar), 0);
+        SYSCALL(SENDMESSAGE, sender, (unsigned int)(payload.arg), 0);
     }
 }
