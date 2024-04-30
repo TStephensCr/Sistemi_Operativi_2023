@@ -88,9 +88,11 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
 
             pcb_t *newProcess = allocPcb();
 
-            newProcess->p_s = &ar->state;//p_s from arg->state.
+            ssi_create_process_t *args = (ssi_create_process_t*)ar;//save struct passed as argument
 
-            newProcess->p_supportStruct = *ar->support;//p_supportStruct from arg->support. If no parameter is provided, this field is set to NULL.
+            newProcess->p_s = *args->state;//p_s from arg->state.
+
+            newProcess->p_supportStruct = args->support;//p_supportStruct from arg->support. If no parameter is provided, this field is set to NULL.
             
             newProcess->p_time = 0;//p_time is set to zero; the new process has yet to accumulate any CPU time
             
@@ -119,7 +121,8 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
 
             int devIndex = EXT_IL_INDEX(device_line) * N_DEV_PER_IL + device_num;
 
-            blockedpcbs[devIndex] = sender;//the process will wait for a response from the SSI
+            //ATTENZIONE NON SI SA ANCORA PERCHE' IL SECONDO INDEX E' 0 E NON 1, NON SI SA QUAL'E' GIUSTO
+            blockedpcbs[devIndex][0] = sender;//the process will wait for a response from the SSI
 
             softBlockCount++;
 
