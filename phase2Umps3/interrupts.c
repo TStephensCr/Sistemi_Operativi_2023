@@ -37,10 +37,10 @@ void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN]
 
         // Insert the PCBs into the ready queue
         if (pcb1 != NULL) {
-            insertProcQ(readyQueue, pcb1);
+            insertProcQ(&readyQueue, pcb1);
         }
         if (pcb2 != NULL) {
-            insertProcQ(readyQueue, pcb2);
+            insertProcQ(&readyQueue, pcb2);
         }
     }
 }
@@ -129,7 +129,10 @@ void NT_handler(int line){
         unsigned int dstatus = device_register->status;          //salvo lo status
         device_register->command = ACK;//acknowledged
     }else{ // device terminali
-
+        dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
+        //gestione interrupt di tutti gli altri dispositivi I/O
+        dstatus = device_register->status;
+        device_register->command = ACK;
         //gestione interrupt terminale --> 2 sub-devices
         if(((device_register->transm_status) & 0x000000FF) == 5){ //ultimi 8 bit contengono il codice dello status
             //output terminale
