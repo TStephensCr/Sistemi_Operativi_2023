@@ -4,7 +4,7 @@ extern unsigned int processCount;
 extern unsigned int softBlockCount;
 extern struct list_head readyQueue;
 extern pcb_PTR currentProcess;
-extern pcb_PTR blockedpcbs[SEMDEVLEN-1][2];
+extern pcb_PTR blockedpcbs[SEMDEVLEN][2];
 extern pcb_t ssi_pcb;
 //interrupting device bitmap è una matrice di booleani in cui se c'è un 1 allora c'è un interrupt pending
 
@@ -81,20 +81,16 @@ void interrupthandler(){
             }
         else if(getCAUSE() & DISKINTERRUPT){//line 3
             NT_handler(line);
-            int address = get_numdevice(3);
         }
         else if(getCAUSE() & FLASHINTERRUPT){//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
             NT_handler(line);
-            int address = get_numdevice(4);
         }
         else if(getCAUSE() & PRINTINTERRUPT){// line 6
             NT_handler(line);
-            int address = get_numdevice(6);
         }
         else if(getCAUSE() & TERMINTERRUPT){// line 7 per i terminal devices devi fare una roba diversa
             NT_handler(line);
-            int address = get_numdevice(7);
-        }
+           }
         endinterrupt();
     }
 }
@@ -131,10 +127,7 @@ void NT_handler(int line){
         //accedo al device register
         dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
         unsigned int dstatus = device_register->status;          //salvo lo status
-        device_register->command = ACK//acknowledged
-
-
-
+        device_register->command = ACK;//acknowledged
     }else{ // device terminali
 
         //gestione interrupt terminale --> 2 sub-devices
@@ -142,18 +135,17 @@ void NT_handler(int line){
             //output terminale
             dstatus = device_register->transm_status;
             device_register->transm_command = ACK;
-            waitingProcess = sbloccapcb(num, blockedpcbs);
-        }
-        else{
+            waitingProcess = sbloccapcb(num,line, blockedpcbs);
+        }else{
             //input terminale
             dstatus = device_register->recv_status;
             device_register->recv_command = ACK;
-            waitingProcess = sbloccapcb(num, blockedpcbs);
+            waitingProcess = sbloccapcb(num,line, blockedpcbs);
         }
     }
 
     if(waitingProcess != NULL){
-        waitingProcess->p_s.v0 = dstatus; 
+        waitingProcess->p_s. = dstatus; 
         send(ssi_pcb, waitingProcess, (memaddr)(dstatus));
         insertProcQ(&readyQueue,waitingProcess);
         softBlockCount--;
