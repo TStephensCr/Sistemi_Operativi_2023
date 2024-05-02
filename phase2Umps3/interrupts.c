@@ -142,13 +142,13 @@ void NT_handler(int line){
         }else{
             //input terminale
             dstatus = device_register->recv_status;
-            device_register->recv_command = ACK;
+            device_register->command = ACK;
             waitingProcess = sbloccapcb(num,line, blockedpcbs);
         }
     }
 
     if(waitingProcess != NULL){
-        waitingProcess->p_s. = dstatus; 
+        waitingProcess->p_s.reg_v0 = dstatus; 
         send(ssi_pcb, waitingProcess, (memaddr)(dstatus));
         insertProcQ(&readyQueue,waitingProcess);
         softBlockCount--;

@@ -30,6 +30,6 @@ int get_numdevice(int);
 int get_status(int);
 void set_status(char);
 cpu_t tempopassato();
-void sbloccapcb(int,int, pcb_PTR);
+void sbloccapcb(int,int, pcb_PTR**);
 
 #endif
