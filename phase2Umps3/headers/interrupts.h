@@ -31,5 +31,6 @@ int get_status(int);
 void set_status(char);
 cpu_t tempopassato();
 void sbloccapcb(int,int, pcb_PTR**);
+void removeBlocked(pcb_t *, pcb_PTR**);
 
 #endif
