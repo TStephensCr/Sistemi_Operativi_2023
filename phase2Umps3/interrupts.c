@@ -151,16 +151,16 @@ void NT_handler(int line){
         dstatus = device_register->status;
         device_register->command = ACK;
         //gestione interrupt terminale --> 2 sub-devices
-        if(((device_register->transm_status) & 0x000000FF) == 5){ //ultimi 8 bit contengono il codice dello status
+        if(((device_register->status) & 0x000000FF) == 5){ //ultimi 8 bit contengono il codice dello status
             //output terminale
             dstatus = device_register->status;
             device_register->command = ACK;
-            sbloccapcb(num,line, blockedpcbs[][0]);
+            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1][0]);
         }else{
             //input terminale
             dstatus = device_register->status;
             device_register->command = ACK;
-            sbloccapcb(num,line, blockedpcbs[][1]);
+            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1][1]);
         }
     }
 
