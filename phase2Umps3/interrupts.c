@@ -33,7 +33,7 @@ void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
     }
 }
 
-
+//da modificare questa funzione in modo tale che gestisca solo il pcb quindi reciever o transmitter
 void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
     // Calculate the index of the device in the blockedpcbs array
     int devIndex = EXT_IL_INDEX(interruptLine) * N_DEV_PER_IL + deviceNum;
