@@ -1,7 +1,7 @@
 #include "/usr/include/umps3/umps/libumps.h"
 #include "./headers/ssi.h"
 
-void terminateProcess(pcb_t* process){
+static void terminateProcess(pcb_t* process){
 
     outChild(process);
 
@@ -27,13 +27,13 @@ void terminateProcess(pcb_t* process){
     if(outProcQ(&PseudoClockWP, process))
         blocked = TRUE;
 
-    processCount--;
+    process_count--;
 
     if(blocked) softBlockCount--;
 
 }
 
-void terminateProcessTree(pcb_t *process) {
+static void terminateProcessTree(pcb_t *process) {
     if (process == NULL)
         return;
 
@@ -51,7 +51,7 @@ void terminateProcessTree(pcb_t *process) {
     }
 }
 
-void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsigned int *device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
+static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsigned int *device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
     for (int i = 3; i < 8; i++){
         for (int k = 0; k < 8; k++){ 
 
@@ -75,7 +75,7 @@ void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsi
     }
 }
 
-void SSIRequest(pcb_t* sender, int service, void* ar){
+static void SSIRequest(pcb_t* sender, int service, void* ar){
     switch(service){
         case 1:
         //CreateProcess
@@ -100,7 +100,7 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
             
             insertChild(sender, newProcess);//The process tree field (e.g. p_sib) by the call to insertChild.
             
-            LDST(&currentProcess->p_s);//return control to the current process
+            LDST(&current_process->p_s);//return control to the current process
             break;
         case 3:
         //DOIO
@@ -174,7 +174,10 @@ void SSIRequest(pcb_t* sender, int service, void* ar){
     }
 }
 
-void remoteProcedureCall(){
+/*
+DA ELIMINARE PERCHE' MAI USATA
+
+static void remoteProcedureCall(){
     while(TRUE){
         ssi_payload_t payload;
 
@@ -188,3 +191,4 @@ void remoteProcedureCall(){
         SYSCALL(SENDMESSAGE, sender, (unsigned int)(payload.arg), 0);
     }
 }
+*/

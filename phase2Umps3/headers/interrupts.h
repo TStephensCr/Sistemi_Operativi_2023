@@ -10,8 +10,6 @@ extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN-1][2];
 extern int ultimo;
 
-
-
 int intconst[8] = { 0x00000001,//device 0
                     0x00000002,//device 1
                     0x00000004,//device 2
@@ -22,15 +20,18 @@ int intconst[8] = { 0x00000001,//device 0
                     0x00000080};//device 7
 
 void interrupthandler();//funzioni abbastanza ovvie comunque sotto spiego cosa fanno
-void NT_handler(int);//forse qui va qualcosa in input
-void startinterrupt();
-void endinterrupt();
-void get_deviceinterrupt(int *);
-int get_numdevice(int);
-int get_status(int);
-void set_status(char);
-cpu_t tempopassato();
-void sbloccapcb(int,int, pcb_PTR blockedpcbs[SEMDEVLEN][2]);
-void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]);
+/*
+DA ELIMINARE:
+    void sbloccapcb(int,int, pcb_PTR blockedpcbs[SEMDEVLEN][2]);
+    void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]);
+    cpu_t tempopassato();
+    void startinterrupt();
+    void endinterrupt();
+    void NT_handler(int);//forse qui va qualcosa in input
+    int get_numdevice(int);
+    void get_deviceinterrupt(int *);
+    int get_status(int);
+    void set_status(char);
+*/
 
 #endif

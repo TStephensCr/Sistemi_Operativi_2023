@@ -5,14 +5,13 @@
 
 extern struct list_head PseudoClockWP;
 
-void terminateProcess(pcb_t* process);
-
-void terminateProcessTree(pcb_t* process);
-
-void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsigned int *device_line);
-
-void SSIRequest(pcb_t* sender, int service, void* ar);
-
-void remoteProcedureCall();
+/*
+DA ELIMINARE:
+    void terminateProcess(pcb_t* process);
+    void terminateProcessTree(pcb_t* process);
+    void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsigned int *device_line);
+    void remoteProcedureCall();
+    void SSIRequest(pcb_t* sender, int service, void* ar);
+*/
 
 #endif
