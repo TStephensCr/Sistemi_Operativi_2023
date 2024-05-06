@@ -117,32 +117,23 @@ static void endinterrupt(){
 static void NT_handler(int line){
     //1
     int num = get_numdevice(line);
-    unsigned int dstatus;
+    unsigned int dstatus = device_register->status;
     pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num][0];
+    dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
 
-    if (line!=7){ //per i device non terminali
-        //accedo al device register
-        dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
-        unsigned int dstatus = device_register->status;          //salvo lo status
-        device_register->command = ACK;//acknowledged
-    }else{ // device terminali
-        dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
+    if(line==7){ // device terminali
         //gestione interrupt di tutti gli altri dispositivi I/O
-        dstatus = device_register->status;
-        device_register->command = ACK;
         //gestione interrupt terminale --> 2 sub-devices
+         device_register->command = ACK;
         if(((device_register->status) & 0x000000FF) == 5){ //ultimi 8 bit contengono il codice dello status
             //output terminale
-            dstatus = device_register->status;
-            device_register->command = ACK;
             sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1]);
         }else{
             //input terminale
-            dstatus = device_register->status;
-            device_register->command = ACK;
             sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1]);
         }
     }
+   
 
     if(waitingProcess != NULL){
         waitingProcess->p_s.reg_v0 = dstatus; 
