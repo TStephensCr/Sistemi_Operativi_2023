@@ -13,5 +13,5 @@ extern struct list_head pcbFree_h;
 
 void exceptionHandler();
 void uTLB_RefillHandler();
-
+int send(pcb_t *, pcb_t *, unsigned int payload);//sender,reciever,msg come sulla teoria
 #endif

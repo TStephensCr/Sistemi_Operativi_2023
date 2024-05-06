@@ -78,6 +78,17 @@ static int SYS2_receiveMessage(){
     return (memaddr)msg->m_sender;
 }
 
+int send(pcb_t *sender, pcb_t *dest, unsigned int payload) {
+    msg_t *msg = allocMsg();
+    if(!msg) //non ci sono più messaggi disponibili
+        return MSGNOGOOD;
+
+    msg->m_sender = sender;
+    msg->m_payload = payload;
+    insertMessage(&(dest->msg_inbox), msg); 
+    return 0;
+}
+
 /*
 Gestisce le eccezioni, capisce che tipo di eccezione è, quindi passa la palla ad un'altra funzione, in base al numero dell'excCode
 Section 4
