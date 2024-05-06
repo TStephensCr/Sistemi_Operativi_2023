@@ -20,6 +20,7 @@ int intconst[8] = { 0x00000001,//device 0
                     0x00000080};//device 7
 
 void interrupthandler();//funzioni abbastanza ovvie comunque sotto spiego cosa fanno
+
 /*
 DA ELIMINARE:
     void sbloccapcb(int,int, pcb_PTR blockedpcbs[SEMDEVLEN][2]);

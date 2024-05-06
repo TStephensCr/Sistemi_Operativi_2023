@@ -118,7 +118,7 @@ static void NT_handler(int line){
     //1
     int num = get_numdevice(line);
     unsigned int dstatus;
-    pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num];
+    pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num][0];
 
     if (line!=7){ //per i device non terminali
         //accedo al device register
@@ -135,12 +135,12 @@ static void NT_handler(int line){
             //output terminale
             dstatus = device_register->status;
             device_register->command = ACK;
-            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1][0]);
+            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1]);
         }else{
             //input terminale
             dstatus = device_register->status;
             device_register->command = ACK;
-            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1][1]);
+            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1]);
         }
     }
 
