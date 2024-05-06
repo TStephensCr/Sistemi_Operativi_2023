@@ -146,7 +146,7 @@ static void NT_handler(int line){
 
     if(waitingProcess != NULL){
         waitingProcess->p_s.reg_v0 = dstatus; 
-        send(ssi_pcb, waitingProcess, (memaddr)(dstatus));
+        sendMsg(ssi_pcb, waitingProcess, (memaddr)(dstatus));
         insertProcQ(&readyQueue,waitingProcess);
         softBlockCount--;
     }
@@ -190,7 +190,7 @@ void interrupthandler(){
             pcb_t *unblocked_pcb;
             while ((unblocked_pcb = removeProcQ(&PseudoClockWP)) != NULL) {
             //sblocco di tutti i processi in attesa dello pseudoclock
-                send(ssi_pcb, unblocked_pcb, 0);
+                sendMsg(ssi_pcb, unblocked_pcb, 0);
                 insertProcQ(&readyQueue, unblocked_pcb);
                 softBlockCount--;
             }

@@ -39,24 +39,28 @@ static void kill(int index){
     }
 }
 
+int sendMsg(pcb_t *senderAddr, pcb_t *destinationAddr, unsigned int payload) {
+    msg_t *msg = allocMsg();
+    if(msg==NULL) return MSGNOGOOD;  //non ho più messaggi disponibili
+    
+    msg->m_sender = senderAddr;
+    msg->m_payload = payload;
+    insertMessage(&(destinationAddr->msg_inbox), msg);
+    return 0;
+}
+
 static int SYS1_sendMessage(){
     pcb_PTR destinationAddr = (pcb_PTR)current_process->p_s.reg_a1;
     unsigned int payload = (unsigned int)current_process->p_s.reg_a2;
 
     if(pcbIsInList(destinationAddr,&pcbFree_h)==1) return DEST_NOT_EXIST;
 
-    msg_t *msg = allocMsg();
-    if(msg==NULL) return MSGNOGOOD;  //non ho più messaggi disponibili
-
-    //il pcb destinatario va svegliato mettendolo nella readyQueue
-    if(pcbIsInList(destinationAddr,&readyQueue)!=1) insertProcQ(&readyQueue, destinationAddr);
-    
-    msg->m_sender = current_process;
-    msg->m_payload = payload;
-    insertMessage(&(destinationAddr->msg_inbox), msg);
+    //Faccio la send, se ha successo, il pcb destinatario va svegliato mettendolo nella readyQueue
+    if(sendMsg(current_process, destinationAddr, payload))
+        if(pcbIsInList(destinationAddr,&readyQueue)!=1)
+            insertProcQ(&readyQueue, destinationAddr);
     return 0;
 } 
-
 
 static int SYS2_receiveMessage(){
     pcb_PTR senderAddr = (pcb_PTR)current_process->p_s.reg_a1;
@@ -76,17 +80,6 @@ static int SYS2_receiveMessage(){
     freeMsg(msg);
 
     return (memaddr)msg->m_sender;
-}
-
-int send(pcb_t *sender, pcb_t *dest, unsigned int payload) {
-    msg_t *msg = allocMsg();
-    if(!msg) //non ci sono più messaggi disponibili
-        return MSGNOGOOD;
-
-    msg->m_sender = sender;
-    msg->m_payload = payload;
-    insertMessage(&(dest->msg_inbox), msg); 
-    return 0;
 }
 
 /*
