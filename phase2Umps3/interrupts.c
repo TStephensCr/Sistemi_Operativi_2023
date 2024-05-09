@@ -58,7 +58,7 @@ static cpu_t tempopassato(){
     return risultante;
 }
 
-static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN-1][2]) {
+static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[][]) {
     if (pcb != NULL) {
         // cerca in blockedpcbs il PCB
         for (int i = 0; i < SEMDEVLEN - 1; i++) {
@@ -75,7 +75,7 @@ static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN-1][2]) {
     }
 }
 
-void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN-1][2]) {
+void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[][]) {
     // calcolo l'indice dell'array blockedpcbs
     int devIndex = EXT_IL_INDEX(interruptLine) * N_DEV_PER_IL + deviceNum;
     // controlli bounds
