@@ -75,20 +75,27 @@ static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN]) {
     }
 }
 
-static void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN]) {
+static void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
     // calcolo l'indice dell'array blockedpcbs
     int devIndex = EXT_IL_INDEX(interruptLine) * N_DEV_PER_IL + deviceNum;
     // controlli bounds
     if (devIndex >= 0 && devIndex < SEMDEVLEN) {
         // salviamo il puntatore
-        pcb_t *pcb = blockedpcbs[devIndex];
+        pcb_t *pcb1 = blockedpcbs[devIndex][0];
+        pcb_t *pcb2 = blockedpcbs[devIndex][1];
         // rimuoviamo il pcb dai pcb bloccati
-        if (pcb != NULL) {
-            removeBlocked(pcb, blockedpcbs);
+        if (pcb1 != NULL) {
+            removeBlocked(pcb1, blockedpcbs);
+        }
+        if (pcb2 != NULL) {
+            removeBlocked(pcb2, blockedpcbs);
         }
         // e lo mettiamo ready
-        if (pcb != NULL) {
-            insertProcQ(&readyQueue, pcb);
+        if (pcb1 != NULL) {
+            insertProcQ(&readyQueue, pcb1);
+        }
+        if (pcb2 != NULL) {
+            insertProcQ(&readyQueue, pcb2);
         }
     }
 }
@@ -125,14 +132,8 @@ static void NT_handler(int line){
     if(line==7){ // device terminali
         //gestione interrupt di tutti gli altri dispositivi I/O
         //gestione interrupt terminale --> 2 sub-devices
-         device_register->command = ACK;
-        if(((device_register->status) & 0x000000FF) == 5){ //ultimi 8 bit contengono il codice dello status
-            //output terminale
-            sbloccapcb(num,line, blockedpcbs[][0]);
-        }else{
-            //input terminale
-            sbloccapcb(num,line, blockedpcbs[][1]);
-        }
+        device_register->command = ACK;
+        sbloccapcb(num,line, blockedpcbs);
     }
    
 
