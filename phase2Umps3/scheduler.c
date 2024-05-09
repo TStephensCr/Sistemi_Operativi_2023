@@ -23,5 +23,5 @@ void scheduler(){
 
     } 
 
-    if(process_count > 0 && softBlockCount = 0){ PANIC(); }//DeadLock state
+    if(process_count > 0 && softBlockCount == 0){ PANIC(); }//DeadLock state
 }

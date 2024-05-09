@@ -13,5 +13,6 @@ DA ELIMINARE:
     void remoteProcedureCall();
     void SSIRequest(pcb_t* sender, int service, void* ar);
 */
+extern void copyState();
 
 #endif

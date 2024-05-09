@@ -90,7 +90,7 @@ static void SSIRequest(pcb_t* sender, int service, void* ar){
 
             ssi_create_process_t *args = (ssi_create_process_t*)ar;//save struct passed as argument
 
-            newProcess->p_s = *args->state;//p_s from arg->state.
+            copyState(newProcess->p_s, *args->state);   //p_s from arg->state.
 
             newProcess->p_supportStruct = args->support;//p_supportStruct from arg->support. If no parameter is provided, this field is set to NULL.
             

@@ -31,7 +31,7 @@ static void kill(int index){
         scheduler();
     }else{
 //Pass Up
-        current_process->p_supportStruct->sup_exceptState[index] = *(state_t*)BIOSDATAPAGE;
+        copyState(&(current_process->p_supportStruct->sup_exceptState[index]), (state_t*)BIOSDATAPAGE);
         //Sezione 7.3.4 del manuale: (u-int stackPtr,u-int status,u-int pc)
         LDCXT(current_process->p_supportStruct->sup_exceptContext[index].stackPtr,
             current_process->p_supportStruct->sup_exceptContext[index].status,

@@ -12,6 +12,16 @@ extern pcb_t ssi_pcb;
 //quello con più priorità quindi poi lo passo al NTHANDLER già gestito
 //inoltre posso lasciare la bitmap qui dentro e chillarmela
 static int get_numdevice(int line){
+
+    int intconst[8] = { 0x00000001,//device 0
+                    0x00000002,//device 1
+                    0x00000004,//device 2
+                    0x00000008,//device 3
+                    0x00000010,//device 4
+                    0x00000020,//device 5
+                    0x00000040,//device 6
+                    0x00000080};//device 7
+
     devregarea_t *dra = (devregarea_t *)BUS_REG_RAM_BASE;
     //accedo alla bitmap dei device per la linea su cui è stato rilevato un interrupt
     unsigned int intdevbitmap = dra->interrupt_dev[line - 3];
@@ -25,16 +35,16 @@ static int get_numdevice(int line){
 }
 
 //salvataggio dello stato
-static void saveState(state_t* dest, state_t* to_copy) {
+//prendiamo i parametri dalla libreria types.h di umps3
+void copyState(state_t* end, state_t* start) {
     //copia di tutti i parametri di uno stato nell'altro
-    dest->entry_hi = to_copy->entry_hi;
-    dest->cause = to_copy->cause;
-    dest->status = to_copy->status;
-    dest->pc_epc = to_copy->pc_epc;
-    for(int i = 0; i < STATE_GPR_LEN; i++) 
-        dest->gpr[i] = to_copy->gpr[i];
-    dest->hi = to_copy->hi;
-    dest->lo = to_copy->lo;
+    end->entry_hi = start->entry_hi;
+    end->cause = start->cause;
+    end->status = start->status;
+    end->pc_epc = start->pc_epc;
+    end->hi = start->hi;
+    end->lo = start->lo;
+    for(int i = 0; i < STATE_GPR_LEN; i++) end->gpr[i] = start->gpr[i];
 }
 
 //tempo che serve a svolgere  il processo
@@ -117,9 +127,9 @@ static void endinterrupt(){
 static void NT_handler(int line){
     //1
     int num = get_numdevice(line);
+    dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
     unsigned int dstatus = device_register->status;
     pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num][0];
-    dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
 
     if(line==7){ // device terminali
         //gestione interrupt di tutti gli altri dispositivi I/O
@@ -137,7 +147,7 @@ static void NT_handler(int line){
 
     if(waitingProcess != NULL){
         waitingProcess->p_s.reg_v0 = dstatus; 
-        send(ssi_pcb, waitingProcess, (memaddr)(dstatus));
+        sendMsg(ssi_pcb, waitingProcess, (memaddr)(dstatus));
         insertProcQ(&readyQueue,waitingProcess);
         softBlockCount--;
     }
@@ -171,7 +181,7 @@ void interrupthandler(){
             setTIMER(-1); //ACK interrupt
             current_process->p_time += tempopassato();
             state_t *exceptionstate = (state_t* )BIOSDATAPAGE;
-            saveState(&(current_process->p_s), exceptionstate);
+            copyState(&(current_process->p_s), exceptionstate);
             insertProcQ(&readyQueue, current_process);
             scheduler();
         }                                               //lascia in questo ordine per la priorità
@@ -181,7 +191,7 @@ void interrupthandler(){
             pcb_t *unblocked_pcb;
             while ((unblocked_pcb = removeProcQ(&PseudoClockWP)) != NULL) {
             //sblocco di tutti i processi in attesa dello pseudoclock
-                send(ssi_pcb, unblocked_pcb, 0);
+                sendMsg(ssi_pcb, unblocked_pcb, 0);
                 insertProcQ(&readyQueue, unblocked_pcb);
                 softBlockCount--;
             }

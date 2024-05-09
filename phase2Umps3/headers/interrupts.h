@@ -10,16 +10,10 @@ extern pcb_PTR currentProcess;
 extern pcb_PTR blockedpcbs[SEMDEVLEN-1][2];
 extern int ultimo;
 
-int intconst[8] = { 0x00000001,//device 0
-                    0x00000002,//device 1
-                    0x00000004,//device 2
-                    0x00000008,//device 3
-                    0x00000010,//device 4
-                    0x00000020,//device 5
-                    0x00000040,//device 6
-                    0x00000080};//device 7
-
 void interrupthandler();//funzioni abbastanza ovvie comunque sotto spiego cosa fanno
+void copyState();
+
+extern int sendMsg();
 
 /*
 DA ELIMINARE:
