@@ -58,7 +58,7 @@ static cpu_t tempopassato(){
     return risultante;
 }
 
-static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
+static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN]) {
     if (pcb != NULL) {
         // cerca in blockedpcbs il PCB
         for (int i = 0; i < SEMDEVLEN - 1; i++) {
@@ -75,7 +75,6 @@ static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
     }
 }
 
-//da modificare questa funzione in modo tale che gestisca solo il pcb quindi o reciever o transmitter
 static void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN]) {
     // calcolo l'indice dell'array blockedpcbs
     int devIndex = EXT_IL_INDEX(interruptLine) * N_DEV_PER_IL + deviceNum;
@@ -129,10 +128,10 @@ static void NT_handler(int line){
          device_register->command = ACK;
         if(((device_register->status) & 0x000000FF) == 5){ //ultimi 8 bit contengono il codice dello status
             //output terminale
-            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1][0]);
+            sbloccapcb(num,line, blockedpcbs[][0]);
         }else{
             //input terminale
-            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1][1]);
+            sbloccapcb(num,line, blockedpcbs[][1]);
         }
     }
    
