@@ -15,4 +15,6 @@ DA ELIMINARE:
 */
 extern void copyState();
 
+void remoteProcedureCall();
+
 #endif

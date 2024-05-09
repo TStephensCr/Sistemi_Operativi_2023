@@ -174,7 +174,7 @@ static void SSIRequest(pcb_t* sender, int service, void* ar){
     }
 }
 
-static void remoteProcedureCall(){
+void remoteProcedureCall(){
     while(TRUE){
         ssi_payload_t payload;
 

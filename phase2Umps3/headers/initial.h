@@ -33,5 +33,6 @@ extern void test ();
 extern void scheduler ();
 extern void uTLB_RefillHandler ();
 extern void exceptionHandler ();
+extern void remoteProcedureCall();
 
 #endif

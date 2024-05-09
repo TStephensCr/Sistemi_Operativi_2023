@@ -1,7 +1,6 @@
 #include "./headers/initial.h"
 /*
 MANCA: (DEBUG)
-2.1
 6.1
 7 (RAMTOP)
 7.1
@@ -49,8 +48,8 @@ static void first_pcb(){
     ssi_pcb->p_s.status = ALLOFF | IECON | IMON;   //Interrupt(bit e InterruptMask) e KernelMode abilitati
     //ssi_pcb->p_s.status = ALLOFF | IEPON | IMON; //DEBUG: Secondo me ha senso quella, ma manuale fa intendere questa verisone, da capire
     
-    ssi_pcb->p_s.pc_epc = (memaddr)test;    //its PC set to the address of SSI_function_entry_point
-    ssi_pcb->p_s.reg_t9 = (memaddr)test;
+    ssi_pcb->p_s.pc_epc = (memaddr)remoteProcedureCall;    //its PC set to the address of SSI_function_entry_point
+    ssi_pcb->p_s.reg_t9 = (memaddr)remoteProcedureCall;
     
     ssi_pcb->p_parent=NULL;
     //ssi_pcb->p_child=NULL;      //DEBUG: Non capisco perché mi dia errore
