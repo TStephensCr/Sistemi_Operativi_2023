@@ -58,7 +58,7 @@ static cpu_t tempopassato(){
     return risultante;
 }
 
-static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN]) {
+static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
     if (pcb != NULL) {
         // cerca in blockedpcbs il PCB
         for (int i = 0; i < SEMDEVLEN - 1; i++) {
