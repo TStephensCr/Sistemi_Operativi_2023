@@ -75,7 +75,7 @@ static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
     }
 }
 
-static void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN-1][2]) {
+void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN-1][2]) {
     // calcolo l'indice dell'array blockedpcbs
     int devIndex = EXT_IL_INDEX(interruptLine) * N_DEV_PER_IL + deviceNum;
     // controlli bounds
@@ -130,8 +130,6 @@ static void NT_handler(int line){
     pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num][0];//non sono sicuro su questo 0
 
     if(line==7){ // device terminali
-        //gestione interrupt di tutti gli altri dispositivi I/O
-        //gestione interrupt terminale --> 2 sub-devices
         device_register->command = ACK;
         sbloccapcb(num,line, blockedpcbs);
     }
