@@ -8,9 +8,10 @@ extern pcb_t ssi_pcb;
 //interrupting device bitmap è una matrice di booleani in cui se c'è un 1 allora c'è un interrupt pending
 
 
-//questa funzione ui sotto non solo mi ritorna il device con un pending interrupt in quella line ma mi ritorna 
-//quello con più priorità quindi poi lo passo al NTHANDLER già gestito
-//inoltre posso lasciare la bitmap qui dentro e chillarmela
+/**
+ * questa funzione qui sotto non solo mi ritorna il device con un pending interrupt in quella line ma mi ritorna quello con più priorità quindi poi lo passo al NTHANDLER già gestito
+    inoltre posso lasciare la bitmap qui dentro e chillarmela
+*/
 static int get_numdevice(int line){
 
     int intconst[8] = { 0x00000001,//device 0
@@ -44,7 +45,8 @@ void copyState(state_t* end, state_t* start) {
     end->pc_epc = start->pc_epc;
     end->hi = start->hi;
     end->lo = start->lo;
-    for(int i = 0; i < STATE_GPR_LEN; i++) end->gpr[i] = start->gpr[i];
+    for(int i = 0; i < STATE_GPR_LEN; i++) 
+        end->gpr[i] = start->gpr[i];
 }
 
 //tempo che serve a svolgere  il processo
@@ -58,14 +60,14 @@ static cpu_t tempopassato(){
 
 static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
     if (pcb != NULL) {
-        // Iterate over the blockedpcbs array to find the PCB pointer
+        // cerca in blockedpcbs il PCB
         for (int i = 0; i < SEMDEVLEN - 1; i++) {
             for (int j = 0; j < 2; j++) {
                 if (blockedpcbs[i][j] == pcb) {
-                    // Found the PCB, set its corresponding entry to NULL
+                    // Una volta trovato, al suo slot assegnamo NULL
                     blockedpcbs[i][j] = NULL;
-                    // Assuming there's only one occurrence of the PCB in the array,
-                    // you can return after removing it
+                    // Assumendo che ci sia una sola volta,
+                    // si può ritornare dopo aver rimosso
                     return;
                 }
             }
@@ -73,31 +75,21 @@ static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
     }
 }
 
-//da modificare questa funzione in modo tale che gestisca solo il pcb quindi reciever o transmitter
-static void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN][2]) {
-    // Calculate the index of the device in the blockedpcbs array
+//da modificare questa funzione in modo tale che gestisca solo il pcb quindi o reciever o transmitter
+static void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[SEMDEVLEN]) {
+    // calcolo l'indice dell'array blockedpcbs
     int devIndex = EXT_IL_INDEX(interruptLine) * N_DEV_PER_IL + deviceNum;
-
-    // Check bounds to avoid potential out-of-bounds access
+    // controlli bounds
     if (devIndex >= 0 && devIndex < SEMDEVLEN) {
-        // Get the PCB pointers from the blockedpcbs array
-        pcb_t *pcb1 = blockedpcbs[devIndex][0];
-        pcb_t *pcb2 = blockedpcbs[devIndex][1];
-
-        // Remove the PCBs from the blocked queue
-        if (pcb1 != NULL) {
-            removeBlocked(pcb1, blockedpcbs);
+        // salviamo il puntatore
+        pcb_t *pcb = blockedpcbs[devIndex];
+        // rimuoviamo il pcb dai pcb bloccati
+        if (pcb != NULL) {
+            removeBlocked(pcb, blockedpcbs);
         }
-        if (pcb2 != NULL) {
-            removeBlocked(pcb2, blockedpcbs);
-        }
-
-        // Insert the PCBs into the ready queue
-        if (pcb1 != NULL) {
-            insertProcQ(&readyQueue, pcb1);
-        }
-        if (pcb2 != NULL) {
-            insertProcQ(&readyQueue, pcb2);
+        // e lo mettiamo ready
+        if (pcb != NULL) {
+            insertProcQ(&readyQueue, pcb);
         }
     }
 }
@@ -129,7 +121,7 @@ static void NT_handler(int line){
     int num = get_numdevice(line);
     dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
     unsigned int dstatus = device_register->status;
-    pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num][0];
+    pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num][0];//non sono sicuro su questo 0
 
     if(line==7){ // device terminali
         //gestione interrupt di tutti gli altri dispositivi I/O
@@ -137,10 +129,10 @@ static void NT_handler(int line){
          device_register->command = ACK;
         if(((device_register->status) & 0x000000FF) == 5){ //ultimi 8 bit contengono il codice dello status
             //output terminale
-            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1]);
+            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1][0]);
         }else{
             //input terminale
-            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1]);
+            sbloccapcb(num,line, blockedpcbs[SEMDEVLEN-1][1]);
         }
     }
    
