@@ -62,6 +62,9 @@ static void first_pcb(){
 }
 
 int main(void){
+    klog_print("a\n");
+    klog_print("a\n");
+    klog_print("a\n");
     passupvector_t *passupvect = (passupvector_t *)PASSUPVECTOR;
     passupvect->tlb_refill_handler = (memaddr)uTLB_RefillHandler;
     passupvect->exception_stackPtr = (memaddr)KERNELSTACK;
