@@ -23,7 +23,6 @@
 #include "../../headers/const.h"
 #include "../../phase1/headers/pcb.h"
 #include "../../phase1/headers/msg.h"
-#include "../../klog.c"
 
 #include "./scheduler.h"
 #include "./exceptions.h"

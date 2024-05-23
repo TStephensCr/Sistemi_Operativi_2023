@@ -4,10 +4,9 @@ static pcb_t pcbTable[MAXPROC];
 LIST_HEAD(pcbFree_h);
 
 void initPcbs() {
-    INIT_LIST_HEAD(&pcbFree_h);
+    //INIT_LIST_HEAD(&pcbFree_h);
     for(int i = 0; i < MAXPROC; i++){
-        list_add_tail(&pcbTable[i].p_list, &pcbFree_h);
-        pcbTable[i].p_pid = i + 1;
+		freePcb(&(pcbTable[i])); 
     }
 }
 
