@@ -24,14 +24,13 @@ static void second_pcb(){
     
     //Spiegati a sezione 2.3 del manuale, la | fa la or Bit-a-Bit delle costanti che inserisco, in modo da attivare i bit giusti
     new_pcb->p_s.status = ALLOFF | IECON | IMON | TEBITON;   //Interrupt(bit e InterruptMask), KernelMode e LocalTimer abilitati
-    //new_pcb->p_s.status = ALLOFF | IEPON | IMON | TEBITON; //DEBUG: Secondo me ha senso quella, ma manuale fa intendere questa verisone, da capire
     
     new_pcb->p_s.pc_epc = (memaddr)test;    
     new_pcb->p_s.reg_t9 = (memaddr)test;
     
     new_pcb->p_parent=NULL;
-    //new_pcb->p_child=NULL;      //DEBUG: Non capisco perché mi dia errore
-    //new_pcb->p_sib=NULL;        //
+    ssi_pcb->p_pid = 2;
+    
     new_pcb->p_time=0;
     new_pcb->p_supportStruct=NULL;
 
@@ -45,15 +44,15 @@ static void first_pcb(){
     RAMTOP(ssi_pcb->p_s.reg_sp);
     
     //Spiegati a sezione 2.3 del manuale, la | fa la or Bit-a-Bit delle costanti che inserisco, in modo da attivare i bit giusti
-    ssi_pcb->p_s.status = ALLOFF | IECON | IMON;   //Interrupt(bit e InterruptMask) e KernelMode abilitati
-    //ssi_pcb->p_s.status = ALLOFF | IEPON | IMON; //DEBUG: Secondo me ha senso quella, ma manuale fa intendere questa verisone, da capire
     
+    ssi_pcb->p_s.status = ALLOFF | IEPON | IMON | TEBITON;
+
     ssi_pcb->p_s.pc_epc = (memaddr)remoteProcedureCall;    //its PC set to the address of SSI_function_entry_point
     ssi_pcb->p_s.reg_t9 = (memaddr)remoteProcedureCall;
+    ssi_pcb-> p_s.gpr[24] = ssi_pcb-> p_s.pc_epc;          //DEBUG
     
     ssi_pcb->p_parent=NULL;
-    //ssi_pcb->p_child=NULL;      //DEBUG: Non capisco perché mi dia errore
-    //ssi_pcb->p_sib=NULL;        //
+    ssi_pcb->p_pid = 1;
     ssi_pcb->p_time=0;
     ssi_pcb->p_supportStruct=NULL;
 
@@ -62,9 +61,6 @@ static void first_pcb(){
 }
 
 int main(void){
-    klog_print("a\n");
-    klog_print("a\n");
-    klog_print("a\n");
     passupvector_t *passupvect = (passupvector_t *)PASSUPVECTOR;
     passupvect->tlb_refill_handler = (memaddr)uTLB_RefillHandler;
     passupvect->exception_stackPtr = (memaddr)KERNELSTACK;
@@ -88,7 +84,7 @@ int main(void){
 
     first_pcb();        //ssi_pcb
     second_pcb();
-    
+
     scheduler();
 
     return 0;
