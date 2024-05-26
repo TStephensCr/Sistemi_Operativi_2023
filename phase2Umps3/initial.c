@@ -15,12 +15,14 @@ int ultimo;
 struct list_head PseudoClockWP;
 struct list_head p_list;              //ultimo TOD
 pcb_PTR ssi_pcb;
+int start;
 
 static void second_pcb(){
     pcb_PTR new_pcb = allocPcb();
     
     RAMTOP(new_pcb->p_s.reg_sp);    //Da togliere e mettere quella sotto ma corretta
     //new_pcb->p_s.reg_sp = RAMTOP(new_pcb->p_s.reg_sp) - (2 * FRAMESIZE); DEBUG: non so come sostituire FRAMESIZE, dovrebbe essere la grandezza del primo pcb inserito
+    new_pcb->p_s.reg_sp -= (2 * PAGESIZE);   //DEBUG
     
     //Spiegati a sezione 2.3 del manuale, la | fa la or Bit-a-Bit delle costanti che inserisco, in modo da attivare i bit giusti
     new_pcb->p_s.status = ALLOFF | IECON | IMON | TEBITON;   //Interrupt(bit e InterruptMask), KernelMode e LocalTimer abilitati
@@ -29,9 +31,8 @@ static void second_pcb(){
     new_pcb->p_s.reg_t9 = (memaddr)test;
     
     new_pcb->p_parent=NULL;
-    ssi_pcb->p_pid = 2;
+    new_pcb->p_pid = 2;
     
-    new_pcb->p_time=0;
     new_pcb->p_supportStruct=NULL;
 
     insertProcQ(&readyQueue, new_pcb);
@@ -48,12 +49,11 @@ static void first_pcb(){
     ssi_pcb->p_s.status = ALLOFF | IEPON | IMON | TEBITON;
 
     ssi_pcb->p_s.pc_epc = (memaddr)remoteProcedureCall;    //its PC set to the address of SSI_function_entry_point
-    ssi_pcb->p_s.reg_t9 = (memaddr)remoteProcedureCall;
+    //ssi_pcb->p_s.reg_t9 = (memaddr)remoteProcedureCall;
     ssi_pcb-> p_s.gpr[24] = ssi_pcb-> p_s.pc_epc;          //DEBUG
     
     ssi_pcb->p_parent=NULL;
     ssi_pcb->p_pid = 1;
-    ssi_pcb->p_time=0;
     ssi_pcb->p_supportStruct=NULL;
 
     insertProcQ(&readyQueue, ssi_pcb);
@@ -61,6 +61,7 @@ static void first_pcb(){
 }
 
 int main(void){
+    LIST_HEAD(readyQueue);
     passupvector_t *passupvect = (passupvector_t *)PASSUPVECTOR;
     passupvect->tlb_refill_handler = (memaddr)uTLB_RefillHandler;
     passupvect->exception_stackPtr = (memaddr)KERNELSTACK;
@@ -81,6 +82,8 @@ int main(void){
     }
     
     LDIT(PSECOND);
+
+    mkEmptyProcQ(&readyQueue);
 
     first_pcb();        //ssi_pcb
     second_pcb();

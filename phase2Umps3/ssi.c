@@ -1,4 +1,3 @@
-#include "/usr/include/umps3/umps/libumps.h"
 #include "./headers/ssi.h"
 
 static void terminateProcess(pcb_t* process){
@@ -76,6 +75,7 @@ static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_nu
 }
 
 static void SSIRequest(pcb_t* sender, int service, void* ar){
+    debug("a_",2, service);
     switch(service){
         case 1:
         //CreateProcess
@@ -179,7 +179,7 @@ void remoteProcedureCall(){
         ssi_payload_t payload;
 
         //receive request
-        int sender = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)(&payload), 0);
+        unsigned int sender = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)(&payload), 0);
 
         //satisfy request
         SSIRequest((pcb_t*)sender, payload.service_code, payload.arg);//dubbio: forse vanno create variabili invece che passare direttamente 

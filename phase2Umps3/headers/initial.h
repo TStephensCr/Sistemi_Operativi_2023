@@ -28,6 +28,7 @@
 #include "./exceptions.h"
 #include "./interrupts.h"
 #include "./ssi.h"
+#include "./print.h"
 
 extern void test ();
 extern void scheduler ();
