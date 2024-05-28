@@ -9,6 +9,17 @@ void uTLB_RefillHandler() {
     LDST((state_t*) 0x0FFFF000);
 }
 
+
+// aggiorna p_time del processo p
+void saveTime(pcb_t *p) {
+    debug("\nu",2,0);
+    int end;
+    STCK(end);
+    p->p_time += (end - start);
+    start = end;
+}
+
+
 static void die(pcb_PTR p){
     while(emptyChild(p)==0){
         pcb_PTR son = removeChild(p);
@@ -49,9 +60,9 @@ int sendMsg(pcb_t *senderAddr, pcb_t *destinationAddr, unsigned int payload) {
     return 0;
 }
 
-static int SYS1_sendMessage(){
-    pcb_PTR destinationAddr = (pcb_PTR)current_process->p_s.reg_a1;
-    unsigned int payload = (unsigned int)current_process->p_s.reg_a2;
+static int SYS1_sendMessage(state_t* excState){
+    pcb_PTR destinationAddr = (pcb_PTR)excState->reg_a1;
+    unsigned int payload = (unsigned int)excState->reg_a2;
 
     if(pcbIsInList(destinationAddr,&pcbFree_h)==1) return DEST_NOT_EXIST;
 
@@ -62,9 +73,9 @@ static int SYS1_sendMessage(){
     return 0;
 } 
 
-static int SYS2_receiveMessage(){
-    pcb_PTR senderAddr = (pcb_PTR)current_process->p_s.reg_a1;
-    memaddr* whereToSave = (memaddr*)current_process->p_s.reg_a2;
+static int SYS2_receiveMessage(state_t* excState){
+    pcb_PTR senderAddr = (pcb_PTR)excState->reg_a1;
+    memaddr* whereToSave = (memaddr*)excState->reg_a2;
 
     msg_PTR msg;
 
@@ -73,8 +84,11 @@ static int SYS2_receiveMessage(){
     }else{
         msg = popMessage(&(current_process->msg_inbox),senderAddr);
     }
-
-    if(msg==NULL) {}  //DEBUG: aggiungere paragrafo 5.5
+    if(!msg) {  //paragrafo 5.5
+        copyState(&(current_process->p_s), excState);
+        saveTime(current_process);
+        scheduler();  
+    }
 
     if(msg->m_payload != (memaddr)NULL) *whereToSave = msg->m_payload;
     freeMsg(msg);
@@ -87,11 +101,14 @@ Gestisce le eccezioni, capisce che tipo di eccezione è, quindi passa la palla a
 Section 4
 */
 void exceptionHandler(){
-    unsigned int excCode = getCAUSE();
+    state_t *excState = (state_t *)BIOSDATAPAGE;       //Stato dell'eccezione salvata all'inizio di BIOSDATAPAGE
+    unsigned int excCode = (getCAUSE() & GETEXECCODE) >> CAUSESHIFT;     //Codice (motivo) dell'eccezione
 
+    debug("\ne",2,excCode);
     switch(excCode){
         //Interrupts
-        case IOINTERRUPTS:                                                  //DEBUG: fatto (credo)
+        case IOINTERRUPTS:  //0                                            //DEBUG: fatto (credo)
+            debug("\ni",2,4);
             interrupthandler();
             break;
 
@@ -112,17 +129,17 @@ void exceptionHandler(){
         //SYSCALL
         case SYSEXCEPTION:              //8                                 //DEBUG: manca questo
             //SYSCALL fatta in user-mode
-            if((current_process->p_s.status & USERPON) != 0){
+            if((excState->status & USERPON) != 0){
 		        setCAUSE(PRIVINSTR);
                 exceptionHandler();
 	        }
             //SYSCALL fatta in kernel-mode
-            int a0 = current_process->p_s.reg_a0;
-            if(a0 == SENDMESSAGE)         //a0 = -1
-                current_process->p_s.reg_v0 = SYS1_sendMessage();
-            else if(a0 == RECEIVEMESSAGE)  //a0 = -2
-                current_process->p_s.reg_v0 = SYS2_receiveMessage();        //v0
-            else kill(GENERALEXCEPT);        //a0 != -1, -2  (Sezione 9.1)
+            int a0 = excState->reg_a0;
+            if(a0 == SENDMESSAGE)           //a0 = -1
+                excState->reg_v0 = SYS1_sendMessage(excState);
+            else if(a0 == RECEIVEMESSAGE)   {//a0 = -2
+                excState->reg_v0 = SYS2_receiveMessage(excState);        //v0
+             } else kill(GENERALEXCEPT);        //a0 != -1, -2  (Sezione 9.1)
             break;
     }
 }

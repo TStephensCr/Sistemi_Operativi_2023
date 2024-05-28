@@ -5,12 +5,13 @@ void scheduler(){
     current_process = removeProcQ(&readyQueue);//Remove the PCB from the head of the Ready Queue
 
     if(current_process != NULL){
-
-        current_process->p_s.status = current_process->p_s.status | TEBITON;//store the pcb in the current_process field
+        debug("\ns",2,1);
+        //current_process->p_s.status = current_process->p_s.status | TEBITON;//store the pcb in the current_process field
 
         setTIMER(TIMESLICE);//load 5 milliseconds on the PLT
 
-        LDST(&current_process->p_s);//perform a Load Processor State on the current_process's processor state
+        STCK(start);
+        LDST(&(current_process->p_s));//perform a Load Processor State on the current_process's processor state
     }
 
     if(process_count == 1){ HALT(); }//only ssi is running

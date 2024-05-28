@@ -118,7 +118,7 @@ static void endinterrupt(){
     if (current_process != NULL)
         LDST ((state_t *)BIOSDATAPAGE);
     else
-        scheduler ();
+        scheduler();
 }
 
 
@@ -169,6 +169,7 @@ void interrupthandler(){
         startinterrupt();
         if(getCAUSE() & LOCALTIMERINT){//line 1    plt interrupt FINITI
             setTIMER(-1); //ACK interrupt
+            saveTime(current_process);
             current_process->p_time += tempopassato();
             state_t *exceptionstate = (state_t* )BIOSDATAPAGE;
             copyState(&(current_process->p_s), exceptionstate);

@@ -8,7 +8,7 @@ MANCA: (DEBUG)
 
 int process_count=0;                  //Process Count, numero di processi attivi e non terminati
 unsigned int softBlockCount;                //Soft-Block Count, numero di processi in waiting per I/O o per tempo esaurito
-struct list_head readyQueue;                //Ready Queue, puntatore alla coda di porcessi in ready
+LIST_HEAD(readyQueue);                //Ready Queue, puntatore alla coda di porcessi in ready
 pcb_PTR current_process;                     //Current Process, punta al processo in running
 pcb_PTR blockedpcbs[SEMDEVLEN-1][2];          //idk va capito
 int ultimo;
@@ -41,22 +41,19 @@ static void second_pcb(){
 
 static void first_pcb(){
     ssi_pcb = allocPcb();
-
     RAMTOP(ssi_pcb->p_s.reg_sp);
-    
+
     //Spiegati a sezione 2.3 del manuale, la | fa la or Bit-a-Bit delle costanti che inserisco, in modo da attivare i bit giusti
-    
     ssi_pcb->p_s.status = ALLOFF | IEPON | IMON | TEBITON;
 
     ssi_pcb->p_s.pc_epc = (memaddr)remoteProcedureCall;    //its PC set to the address of SSI_function_entry_point
-    //ssi_pcb->p_s.reg_t9 = (memaddr)remoteProcedureCall;
-    ssi_pcb-> p_s.gpr[24] = ssi_pcb-> p_s.pc_epc;          //DEBUG
-    
+    ssi_pcb->p_s.reg_t9 = (memaddr)remoteProcedureCall;
+  
     ssi_pcb->p_parent=NULL;
     ssi_pcb->p_pid = 1;
     ssi_pcb->p_supportStruct=NULL;
 
-    insertProcQ(&readyQueue, ssi_pcb);
+    insertProcQ(&readyQueue, ssi_pcb); 
     process_count++;
 }
 
@@ -76,19 +73,17 @@ int main(void){
     softBlockCount=0;
     mkEmptyProcQ(&readyQueue);
     current_process=NULL;
-    for(int i=0;i<SEMDEVLEN;i++){
+    for(int i=0;i<SEMDEVLEN-1;i++){
         blockedpcbs[i][0]=NULL;
         blockedpcbs[i][1]=NULL;
     }
-    
-    LDIT(PSECOND);
 
     mkEmptyProcQ(&readyQueue);
+    LDIT(PSECOND);
 
     first_pcb();        //ssi_pcb
     second_pcb();
 
     scheduler();
-
     return 0;
 }

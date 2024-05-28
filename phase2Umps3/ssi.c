@@ -75,7 +75,6 @@ static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_nu
 }
 
 static void SSIRequest(pcb_t* sender, int service, void* ar){
-    debug("a_",2, service);
     switch(service){
         case 1:
         //CreateProcess

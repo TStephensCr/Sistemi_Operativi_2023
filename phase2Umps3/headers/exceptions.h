@@ -11,8 +11,9 @@ extern cpu_t ultimo;
 
 void exceptionHandler();
 void uTLB_RefillHandler();
+void saveTime();
+int sendMsg();
 
 extern struct list_head pcbFree_h;
-extern int sendMsg();
 
 #endif
