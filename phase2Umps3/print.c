@@ -95,3 +95,36 @@ void debug(char *strp,int len, int b) {
     mp--;
     termprint(tstrp, 0);
 }
+
+void adebug0(){
+    int i=0;
+    i++;
+}
+void adebug1(){
+    int i=0;
+    i++;
+}
+void adebug2(){
+    int i=0;
+    i++;
+}
+void adebug3(){
+    int i=0;
+    i++;
+}
+void adebug4(){
+    int i=0;
+    i++;
+}
+void adebug5(){
+    int i=0;
+    i++;
+}
+void adebug6(){
+    int i=0;
+    i++;
+}
+void adebug7(){
+    int i=0;
+    i++;
+}

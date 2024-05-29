@@ -5,9 +5,7 @@ void scheduler(){
     current_process = removeProcQ(&readyQueue);//Remove the PCB from the head of the Ready Queue
 
     if(current_process != NULL){
-        debug("\ns",2,1);
         //current_process->p_s.status = current_process->p_s.status | TEBITON;//store the pcb in the current_process field
-
         setTIMER(TIMESLICE);//load 5 milliseconds on the PLT
 
         STCK(start);

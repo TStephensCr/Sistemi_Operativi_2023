@@ -12,7 +12,6 @@ void uTLB_RefillHandler() {
 
 // aggiorna p_time del processo p
 void saveTime(pcb_t *p) {
-    debug("\nu",2,0);
     int end;
     STCK(end);
     p->p_time += (end - start);
@@ -64,36 +63,44 @@ static int SYS1_sendMessage(state_t* excState){
     pcb_PTR destinationAddr = (pcb_PTR)excState->reg_a1;
     unsigned int payload = (unsigned int)excState->reg_a2;
 
-    if(pcbIsInList(destinationAddr,&pcbFree_h)==1) return DEST_NOT_EXIST;
 
-    //Faccio la send, se ha successo, il pcb destinatario va svegliato mettendolo nella readyQueue
-    if(sendMsg(current_process, destinationAddr, payload))
-        if(pcbIsInList(destinationAddr,&readyQueue)!=1)
-            insertProcQ(&readyQueue, destinationAddr);
-    return 0;
+    //Processo destinatario non esiste
+    if(pcbIsInList(destinationAddr,&pcbFree_h)==1)
+        return DEST_NOT_EXIST; //-2
+
+    //Processo destinatario era nella readyQueue o è il processo corrente
+    if(pcbIsInList(destinationAddr,&readyQueue) || destinationAddr == current_process)
+        return(sendMsg(current_process, destinationAddr, payload));
+
+    //Processo destinatario er bloccto ad aspettare e va svegliato (se send ha successo)
+    insertProcQ(&readyQueue, destinationAddr);
+    return sendMsg(current_process, destinationAddr, payload); //risultato della send
 } 
 
-static int SYS2_receiveMessage(state_t* excState){
-    pcb_PTR senderAddr = (pcb_PTR)excState->reg_a1;
+static void SYS2_receiveMessage(state_t* excState){
+    memaddr senderAddr = excState->reg_a1;
     memaddr* whereToSave = (memaddr*)excState->reg_a2;
 
     msg_PTR msg;
-
-    if(senderAddr == (pcb_PTR)ANYMESSAGE){ //prendiamo il primo messaggio nella lista
+    //se è ANYMESSAGE prendiamo il primo messaggio nella lista
+    if(senderAddr == ANYMESSAGE)
         msg = popMessage(&(current_process->msg_inbox),NULL);
-    }else{
-        msg = popMessage(&(current_process->msg_inbox),senderAddr);
-    }
+    else
+        msg = popMessage(&(current_process->msg_inbox),(pcb_PTR)(senderAddr));
+
     if(!msg) {  //paragrafo 5.5
         copyState(&(current_process->p_s), excState);
         saveTime(current_process);
+        //insertProcQ(&readyQueue,current_process); DEBUG:per me serve ma idk
         scheduler();  
     }
 
     if(msg->m_payload != (memaddr)NULL) *whereToSave = msg->m_payload;
     freeMsg(msg);
 
-    return (memaddr)msg->m_sender;
+    excState->reg_v0 = (memaddr)msg->m_sender;
+    excState->pc_epc += WORDLEN;
+    LDST(excState);
 }
 
 /*
@@ -104,12 +111,10 @@ void exceptionHandler(){
     state_t *excState = (state_t *)BIOSDATAPAGE;       //Stato dell'eccezione salvata all'inizio di BIOSDATAPAGE
     unsigned int excCode = (getCAUSE() & GETEXECCODE) >> CAUSESHIFT;     //Codice (motivo) dell'eccezione
 
-    debug("\ne",2,excCode);
     switch(excCode){
         //Interrupts
         case IOINTERRUPTS:  //0                                            //DEBUG: fatto (credo)
-            debug("\ni",2,4);
-            interrupthandler();
+            interrupthandler(getCAUSE(),excState);
             break;
 
         //TLB Exceptions                                                    //DEBUG: fatto (credo)
@@ -135,11 +140,14 @@ void exceptionHandler(){
 	        }
             //SYSCALL fatta in kernel-mode
             int a0 = excState->reg_a0;
-            if(a0 == SENDMESSAGE)           //a0 = -1
+            if(a0 == SENDMESSAGE){           //a0 = -1
                 excState->reg_v0 = SYS1_sendMessage(excState);
-            else if(a0 == RECEIVEMESSAGE)   {//a0 = -2
-                excState->reg_v0 = SYS2_receiveMessage(excState);        //v0
-             } else kill(GENERALEXCEPT);        //a0 != -1, -2  (Sezione 9.1)
+                excState->pc_epc += WORDLEN;    //DEBUG: da capire bene perché
+                LDST(excState);
+            }
+            else if(a0 == RECEIVEMESSAGE)//a0 = -2
+                SYS2_receiveMessage(excState);
+            else kill(GENERALEXCEPT);        //a0 != -1, -2  (Sezione 9.1)
             break;
     }
 }

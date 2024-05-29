@@ -32,6 +32,7 @@ static int get_numdevice(int line){
             dnumber = i;
         }
     }
+    //debug("\nn",2,dnumber);
     return dnumber;
 }
 
@@ -128,7 +129,7 @@ static void NT_handler(int line){
     dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
     unsigned int dstatus = device_register->status;
     pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num][0];//non sono sicuro su questo 0
-
+    //debug("\np",2,waitingProcess->p_pid);
     if(line==7){ // device terminali
         device_register->command = ACK;
         sbloccapcb(num,line, blockedpcbs);
@@ -164,44 +165,52 @@ static void NT_handler(int line){
 // external devices line 3-6
 // in ogni linea controlla quale device ha un interrupt pending attraverso la interrupting device bit map
 // 
-void interrupthandler(){
-    for(int line = 1; line < 8 ; line++){
-        startinterrupt();
-        if(getCAUSE() & LOCALTIMERINT){//line 1    plt interrupt FINITI
-            setTIMER(-1); //ACK interrupt
-            saveTime(current_process);
-            current_process->p_time += tempopassato();
-            state_t *exceptionstate = (state_t* )BIOSDATAPAGE;
-            copyState(&(current_process->p_s), exceptionstate);
-            insertProcQ(&readyQueue, current_process);
-            scheduler();
-        }                                               //lascia in questo ordine per la priorità
-        else if(getCAUSE() & TIMERINTERRUPT){//line 2   interval timer interrupt
-            //100 millisecondi nell'interval timer
-            LDIT(PSECOND);
-            pcb_t *unblocked_pcb;
-            while ((unblocked_pcb = removeProcQ(&PseudoClockWP)) != NULL) {
-            //sblocco di tutti i processi in attesa dello pseudoclock
-                sendMsg(ssi_pcb, unblocked_pcb, 0);
-                insertProcQ(&readyQueue, unblocked_pcb);
-                softBlockCount--;
-            }
+//capiamo quale sia il tipo di interrupt da eseguire seguendo la priorità da 0 a 7
+void interrupthandler(unsigned int excCause, state_t* excState){
+    startinterrupt();
+    if(excCause & LOCALTIMERINT){//line 1    plt interrupt FINITI
+        //debug("\na",2,excCause);
+        setTIMER(-1); //ACK interrupt
+        saveTime(current_process);
+        current_process->p_time += tempopassato();
+        state_t *exceptionstate = (state_t* )BIOSDATAPAGE;
+        copyState(&(current_process->p_s), exceptionstate);
+        insertProcQ(&readyQueue, current_process);
+        scheduler();
+    }                                               //lascia in questo ordine per la priorità
+    else if(excCause & TIMERINTERRUPT){//line 2   interval timer interrupt
+        
+        //debug("\nb",2,excCause);//100 millisecondi nell'interval timer
+        LDIT(PSECOND);
+        pcb_t *unblocked_pcb;
+        while ((unblocked_pcb = removeProcQ(&PseudoClockWP)) != NULL) {
+        //sblocco di tutti i processi in attesa dello pseudoclock
+            sendMsg(ssi_pcb, unblocked_pcb, 0);
+            insertProcQ(&readyQueue, unblocked_pcb);
+            softBlockCount--;
+        }
 
-            //ritorna il controllo al current process
-            LDST((state_t *)BIOSDATAPAGE);
-            }
-        else if(getCAUSE() & DISKINTERRUPT){//line 3
-            NT_handler(line);
-        }
-        else if(getCAUSE() & FLASHINTERRUPT){//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
-            NT_handler(line);
-        }
-        else if(getCAUSE() & PRINTINTERRUPT){// line 6
-            NT_handler(line);
-        }
-        else if(getCAUSE() & TERMINTERRUPT){// line 7 per i terminal devices devi fare una roba diversa
-            NT_handler(line);
-           }
-        endinterrupt();
+        //ritorna il controllo al current process
+        LDST((state_t *)BIOSDATAPAGE);
     }
+    else if(excCause & DISKINTERRUPT){//line 3
+        //debug("\nc",2,excCause);
+        NT_handler(3);
+    }
+    else if(excCause & FLASHINTERRUPT){//line 4 linea 5 skippabile perché il nostro os non avrà interazione con intrnet
+        
+        //debug("\nd",2,excCause);
+        NT_handler(4);
+    }
+    else if(excCause & PRINTINTERRUPT){// line 6
+        
+        //debug("\nf",2,excCause);
+        NT_handler(6);
+    }
+    else if(excCause & TERMINTERRUPT){// line 7 per i terminal devices devi fare una roba diversa
+        
+        //debug("\ng",2,excCause);
+        NT_handler(7);
+    }
+    endinterrupt();
 }

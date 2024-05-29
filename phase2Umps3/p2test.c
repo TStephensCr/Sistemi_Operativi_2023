@@ -176,7 +176,6 @@ pcb_t *create_process(state_t *s)
 /*********************************************************************/
 void test()
 {
-    debug("\nt",2,0);
     test_pcb = current_process;
 
     // test send and receive
