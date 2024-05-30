@@ -59,44 +59,35 @@ static cpu_t tempopassato(){
     return risultante;
 }
 
-static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[][2]) {
+static void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[]) {
     if (pcb != NULL) {
         // cerca in blockedpcbs il PCB
         for (int i = 0; i < SEMDEVLEN - 1; i++) {
-            for (int j = 0; j < 2; j++) {
-                if (blockedpcbs[i][j] == pcb) {
-                    // Una volta trovato, al suo slot assegnamo NULL
-                    blockedpcbs[i][j] = NULL;
-                    // Assumendo che ci sia una sola volta,
-                    // si può ritornare dopo aver rimosso
-                    return;
-                }
+            if (blockedpcbs[i] == pcb) {
+                // Una volta trovato, al suo slot assegnamo NULL
+                blockedpcbs[i] = NULL;
+                // Assumendo che ci sia una sola volta,
+                // si può ritornare dopo aver rimosso
+                return;
             }
         }
     }
 }
 
-void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[][2]) {
+void sbloccapcb(int deviceNum, int interruptLine, pcb_PTR blockedpcbs[]) {
     // calcolo l'indice dell'array blockedpcbs
     int devIndex = EXT_IL_INDEX(interruptLine) * N_DEV_PER_IL + deviceNum;
     // controlli bounds
     if (devIndex >= 0 && devIndex < SEMDEVLEN) {
         // salviamo il puntatore
-        pcb_t *pcb1 = blockedpcbs[devIndex][0];
-        pcb_t *pcb2 = blockedpcbs[devIndex][1];
+        pcb_t *pcb1 = blockedpcbs[devIndex];
         // rimuoviamo il pcb dai pcb bloccati
         if (pcb1 != NULL) {
             removeBlocked(pcb1, blockedpcbs);
         }
-        if (pcb2 != NULL) {
-            removeBlocked(pcb2, blockedpcbs);
-        }
         // e lo mettiamo ready
         if (pcb1 != NULL) {
             insertProcQ(&readyQueue, pcb1);
-        }
-        if (pcb2 != NULL) {
-            insertProcQ(&readyQueue, pcb2);
         }
     }
 }
@@ -128,7 +119,7 @@ static void NT_handler(int line){
     int num = get_numdevice(line);
     dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
     unsigned int dstatus = device_register->status;
-    pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num][0];//non sono sicuro su questo 0
+    pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num];
     //debug("\np",2,waitingProcess->p_pid);
     if(line==7){ // device terminali
         device_register->command = ACK;

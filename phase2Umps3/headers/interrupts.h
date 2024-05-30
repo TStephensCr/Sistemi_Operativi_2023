@@ -7,7 +7,7 @@ extern unsigned int processCount;
 extern unsigned int softBlockCount;
 extern struct list_head readyQueue;
 extern pcb_PTR currentProcess;
-extern pcb_PTR blockedpcbs[SEMDEVLEN-1][2];
+extern pcb_PTR blockedpcbs[SEMDEVLEN-1];
 extern int ultimo;
 
 void interrupthandler();//funzioni abbastanza ovvie comunque sotto spiego cosa fanno
@@ -17,8 +17,8 @@ extern int sendMsg();
 
 /*
 DA ELIMINARE:
-    void sbloccapcb(int,int, pcb_PTR blockedpcbs[SEMDEVLEN][2]);
-    void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN][2]);
+    void sbloccapcb(int,int, pcb_PTR blockedpcbs[SEMDEVLEN]);
+    void removeBlocked(pcb_t *pcb, pcb_PTR blockedpcbs[SEMDEVLEN]);
     cpu_t tempopassato();
     void startinterrupt();
     void endinterrupt();

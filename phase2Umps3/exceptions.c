@@ -52,7 +52,7 @@ static void kill(int index){
 int sendMsg(pcb_t *senderAddr, pcb_t *destinationAddr, unsigned int payload) {
     msg_t *msg = allocMsg();
     if(msg==NULL) return MSGNOGOOD;  //non ho più messaggi disponibili
-    
+
     msg->m_sender = senderAddr;
     msg->m_payload = payload;
     insertMessage(&(destinationAddr->msg_inbox), msg);
@@ -87,7 +87,6 @@ static void SYS2_receiveMessage(state_t* excState){
         msg = popMessage(&(current_process->msg_inbox),NULL);
     else
         msg = popMessage(&(current_process->msg_inbox),(pcb_PTR)(senderAddr));
-
     if(!msg) {  //paragrafo 5.5
         copyState(&(current_process->p_s), excState);
         saveTime(current_process);
@@ -95,7 +94,9 @@ static void SYS2_receiveMessage(state_t* excState){
         scheduler();  
     }
 
-    if(msg->m_payload != (memaddr)NULL) *whereToSave = msg->m_payload;
+    if(msg->m_payload != (memaddr)NULL){
+        *whereToSave = msg->m_payload;
+    }
     freeMsg(msg);
 
     excState->reg_v0 = (memaddr)msg->m_sender;
@@ -128,11 +129,12 @@ void exceptionHandler(){
         case 4: case 5: case 6: case 7:
         case BREAKEXCEPTION: case PRIVINSTR:    //9,10
         case 11: case 12:
+            adebug0();
             kill(GENERALEXCEPT);
             break;
 
         //SYSCALL
-        case SYSEXCEPTION:              //8                                 //DEBUG: manca questo
+        case SYSEXCEPTION:              //8                    //DEBUG: manca questo
             //SYSCALL fatta in user-mode
             if((excState->status & USERPON) != 0){
 		        setCAUSE(PRIVINSTR);
@@ -149,5 +151,7 @@ void exceptionHandler(){
                 SYS2_receiveMessage(excState);
             else kill(GENERALEXCEPT);        //a0 != -1, -2  (Sezione 9.1)
             break;
+        default:
+            PANIC();
     }
 }

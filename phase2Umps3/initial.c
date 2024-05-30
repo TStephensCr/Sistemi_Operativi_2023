@@ -6,11 +6,26 @@ MANCA: (DEBUG)
 7.1
 */
 
-int process_count=0;                  //Process Count, numero di processi attivi e non terminati
+int process_count;                  //Process Count, numero di processi attivi e non terminati
 unsigned int softBlockCount;                //Soft-Block Count, numero di processi in waiting per I/O o per tempo esaurito
 LIST_HEAD(readyQueue);                //Ready Queue, puntatore alla coda di porcessi in ready
 pcb_PTR current_process;                     //Current Process, punta al processo in running
-pcb_PTR blockedpcbs[SEMDEVLEN-1][2];          //idk va capito
+pcb_PTR blockedpcbs[SEMDEVLEN-1];
+/*
+0-7     DISKS
+8-15    FLASH
+16-23   NETWORK
+24-31   PRINTERS
+32-48   TERMINALS
+            32  Scrittura primo terminale
+            33  Lettura primo terminale
+            34  Scrittura secondo terminale
+            35  Lettura secondo terminale
+            ...
+            46  Scrittura ottavo terminale
+            47  Lettura ottavo terminale
+*/
+LIST_HEAD(waitingForClock);
 int ultimo;
 struct list_head PseudoClockWP;
 struct list_head p_list;              //ultimo TOD
@@ -28,7 +43,8 @@ static void second_pcb(){
     new_pcb->p_s.status = ALLOFF | IECON | IMON | TEBITON;   //Interrupt(bit e InterruptMask), KernelMode e LocalTimer abilitati
     
     new_pcb->p_s.pc_epc = (memaddr)test;    
-    new_pcb->p_s.reg_t9 = (memaddr)test;
+    //new_pcb->p_s.reg_t9 = (memaddr)test;
+    ssi_pcb-> p_s.gpr[24] = new_pcb-> p_s.pc_epc;
     
     new_pcb->p_parent=NULL;
     new_pcb->p_pid = 2;
@@ -47,7 +63,8 @@ static void first_pcb(){
     ssi_pcb->p_s.status = ALLOFF | IEPON | IMON | TEBITON;
 
     ssi_pcb->p_s.pc_epc = (memaddr)remoteProcedureCall;    //its PC set to the address of SSI_function_entry_point
-    ssi_pcb->p_s.reg_t9 = (memaddr)remoteProcedureCall;
+    //ssi_pcb->p_s.reg_t9 = (memaddr)remoteProcedureCall;
+    ssi_pcb-> p_s.gpr[24] = ssi_pcb-> p_s.pc_epc;
   
     ssi_pcb->p_parent=NULL;
     ssi_pcb->p_pid = 1;
@@ -58,7 +75,6 @@ static void first_pcb(){
 }
 
 int main(void){
-    LIST_HEAD(readyQueue);
     passupvector_t *passupvect = (passupvector_t *)PASSUPVECTOR;
     passupvect->tlb_refill_handler = (memaddr)uTLB_RefillHandler;
     passupvect->exception_stackPtr = (memaddr)KERNELSTACK;
@@ -74,11 +90,11 @@ int main(void){
     mkEmptyProcQ(&readyQueue);
     current_process=NULL;
     for(int i=0;i<SEMDEVLEN-1;i++){
-        blockedpcbs[i][0]=NULL;
-        blockedpcbs[i][1]=NULL;
+        blockedpcbs[i]=NULL;
     }
 
     mkEmptyProcQ(&readyQueue);
+    mkEmptyProcQ(&waitingForClock);
     LDIT(PSECOND);
 
     first_pcb();        //ssi_pcb

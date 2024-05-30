@@ -8,17 +8,13 @@ static void terminateProcess(pcb_t* process){
     int blocked = FALSE;
 
     for(int i = 0; i < SEMDEVLEN; i++){
-        for(int j = 0; j < 2; j++){
+        if(blockedpcbs[i] == (pcb_PTR)process){
 
-            if(blockedpcbs[i][j] == (pcb_PTR)process){
+            blockedpcbs[i] = NULL;
 
-                blockedpcbs[i][j] = NULL;
+            blocked = TRUE;
 
-                blocked = TRUE;
-
-                break;
-            }
-
+            break;
         }
     }
 
@@ -50,104 +46,112 @@ static void terminateProcessTree(pcb_t *process) {
     }
 }
 
-static void findDeviceNum(memaddr commandAddr, pcb_t *p, unsigned int *device_num, unsigned int *device_line){//dubbio: forse cambiare & in * e aggiungere & dove la funzione viene chiamata
-    for (int i = 3; i < 8; i++){
-        for (int k = 0; k < 8; k++){ 
-
-            dtpreg_t *baseAddr = (dtpreg_t *)DEV_REG_ADDR(i, k);//base address for device
-
-            if(commandAddr == (memaddr)(baseAddr->command) ){//forse serve & su command
-
-                device_num = (unsigned int*)k;
-                device_line = (unsigned int*)i;
-
-                return;
-            }else if(i == 7 && commandAddr == (memaddr)(baseAddr->command)){
-
-                device_num = (unsigned int*)k;
-                device_line = (unsigned int*)i;
-                
+static void findDeviceNum(memaddr commandAddr, unsigned int *device_num, unsigned int *device_line){
+    //cerco prima tra i terminali (gli unici dispositivi che sono presenti in questa fase)
+    for(int i=0; i<16; i+=2){
+        termreg_t* termReg = (termreg_t*)DEV_REG_ADDR(7, i);    //Macro che trova l'indirizzo del device data la line e il num, definita in arch.h
+        if(commandAddr == (memaddr)&(termReg->transm_command)){   //controllo il sub-channel di scrittura
+            *device_line = 7;   //linea dei terminali
+            *device_num = i;
+            return;
+        }if(commandAddr == (memaddr)&(termReg->recv_command)){   //controllo il sub-channel di lettura
+            *device_line = 7;   //linea dei terminali
+            *device_num = i+1;
+            return;
+        }
+    }
+    //cerco tra ognuno degli 8 canali dei 4 dispositivi (da 3 a 6) dei non-terminali
+    for(int i=3; i<7; i++){
+        for(int j=0; j<8; j++){
+            dtpreg_t* devReg = (dtpreg_t*)DEV_REG_ADDR(i, j);    //Macro che trova l'indirizzo del device data la line e il num, definita in arch.h
+            if(commandAddr == (memaddr)&(devReg->command)){   //vedo se l'indirizzo di base_address->command con command_address
+                *device_line = i;
+                *device_num = j;
                 return;
             }
-
-        }  
+        }
     }
 }
 
-static void SSIRequest(pcb_t* sender, int service, void* ar){
-    switch(service){
-        case 1:
-        //CreateProcess
+static unsigned int SSIRequest(pcb_t* sender, ssi_payload_t* payload){
+    int ris=0;  //DEBUG: da togliere da qui e da applicare ad ogni case
+    void* ar = payload->arg;
+    int service = payload->service_code;
+    switch(payload->service_code){
+        case CREATEPROCESS: //1
+            adebug0();
             //check resources availability
-            if(emptyProcQ(&pcbFree_h)){
-                ar = (void*)NOPROC;
-            }
+            if(emptyProcQ(&pcbFree_h)) return NOPROC;
 
             //initialize new process
-
-            pcb_t *newProcess = allocPcb();
-
-            ssi_create_process_t *args = (ssi_create_process_t*)ar;//save struct passed as argument
-
-            copyState(newProcess->p_s, *args->state);   //p_s from arg->state.
-
-            newProcess->p_supportStruct = args->support;//p_supportStruct from arg->support. If no parameter is provided, this field is set to NULL.
-            
+            pcb_PTR newProcess = allocPcb();
             newProcess->p_time = 0;//p_time is set to zero; the new process has yet to accumulate any CPU time
+            newProcess->p_supportStruct = ((ssi_create_process_PTR)payload->arg)->support;//p_supportStruct from arg->support. If no parameter is provided, this field is set to NULL.
+            copyState(&(newProcess->p_s), ((ssi_create_process_PTR)payload->arg)->state);   //p_s from arg->state.s
             
-            insertProcQ(&sender->p_list, newProcess);//The process queue field (e.g. p_list) by the call to insertProcQ
+            //si_create_process_t *args = (ssi_create_process_t*)ar;//save struct passed as argument            
             
             insertChild(sender, newProcess);//The process tree field (e.g. p_sib) by the call to insertChild.
+
+            insertProcQ(&readyQueue, newProcess);//The process queue field (e.g. p_list) by the call to insertProcQ
             
-            LDST(&current_process->p_s);//return control to the current process
+            process_count++;
+            ris=(unsigned int)newProcess;
+            //LDST(&current_process->p_s);//return control to the current process
             break;
-        case 3:
-        //DOIO
+        case TERMPROCESS:   //2
+            adebug6();
+            ar = (service) ? NULL : ar; //If service is null, the sender process must be terminated, regardless of the argument
 
-            ssi_do_io_t *do_io = (ssi_do_io_t *)ar;//do_io struct passed as argument
+            pcb_t *tmp_pcb = (ar == NULL) ? sender : ar;//If the argument is null, the sender process must be terminated
 
-            unsigned int *commandAddr = do_io->commandAddr;
+            terminateProcessTree(tmp_pcb);
+
+            break;
+        case DOIO:  //3
+            adebug1();
+
+            //do_io struct passed as argument
+            ssi_do_io_t* do_io = (ssi_do_io_t*)payload->arg;
 
             unsigned int commandValue = do_io->commandValue;
 
-            unsigned int device_num;
+            unsigned int device_num = -1;
+            unsigned int device_line = -1;
+            findDeviceNum((memaddr)do_io->commandAddr, &device_num, &device_line);//finding device number and saving it to sender pcb
 
-            unsigned int device_line;
+            //if(device_num == -1 && device_line==-1) PANIC();    //DEBUG:secondo me avrebbe senso
+            
+            *(do_io->commandAddr) = commandValue;//the SSI will write the requested value on the device
 
-            findDeviceNum((memaddr)commandAddr, sender, &device_num, &device_line);//finding device number and saving it to sender pcb
+            //devIndex = (line-3)*8 + num
+            int devIndex = EXT_IL_INDEX(device_line) * N_DEV_PER_IL + device_num;   
 
-            *commandAddr = commandValue;//the SSI will write the requested value on the device
-
-            int devIndex = EXT_IL_INDEX(device_line) * N_DEV_PER_IL + device_num;
-
-            //ATTENZIONE NON SI SA ANCORA PERCHE' IL SECONDO INDEX E' 0 E NON 1, NON SI SA QUAL'E' GIUSTO
-            blockedpcbs[devIndex][0] = sender;//the process will wait for a response from the SSI
+            outProcQ(&readyQueue, sender);  //tolgo dai ready se era lì
+            blockedpcbs[devIndex] = sender; //the process will wait for a response from the SSI
 
             softBlockCount++;
-
+            ris=-1;
             break;
-        case 4:
-        //GETCPUTIME
-
+        case GETTIME:   //4
+            adebug2();
             ar = &(sender->p_time);
 
             break;
-        case 5:
-        //WaitForClock
-
+        case CLOCKWAIT: //5
+            adebug3();
             softBlockCount++;
 
             insertProcQ(&PseudoClockWP, sender);
 
             break;
-        case 6:
-        //GetSupportData
-
+        case GETSUPPORTPTR: //6
+            adebug4();
             ar = sender->p_supportStruct;
 
             break;
-        case 7:
-        //GetProcessID
+        case GETPROCESSID:  //7
+            adebug5();
 
             if(ar == 0){//return sender's PID if argument is 0
                 ar = &(sender->p_pid);
@@ -160,30 +164,21 @@ static void SSIRequest(pcb_t* sender, int service, void* ar){
             else ar = 0;//return 0 if sender is root and argument is not 0
 
             break;
-        default:
-        //Terminate Process
-
-            ar = (service) ? NULL : ar; //If service is null, the sender process must be terminated, regardless of the argument
-
-            pcb_t *tmp_pcb = (ar == NULL) ? sender : ar;//If the argument is null, the sender process must be terminated
-
-            terminateProcessTree(tmp_pcb);
-
-            break;
     }
+    return ris;
 }
 
 void remoteProcedureCall(){
     while(TRUE){
-        ssi_payload_t payload;
+        ssi_payload_t* payload;
 
         //receive request
         unsigned int sender = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned int)(&payload), 0);
 
         //satisfy request
-        SSIRequest((pcb_t*)sender, payload.service_code, payload.arg);//dubbio: forse vanno create variabili invece che passare direttamente 
+        unsigned int ris = SSIRequest((pcb_PTR)sender, payload);
 
         //send back results
-        SYSCALL(SENDMESSAGE, sender, (unsigned int)(payload.arg), 0);
+        if(ris!=-1) SYSCALL(SENDMESSAGE, sender, ris, 0);
     }
 }
