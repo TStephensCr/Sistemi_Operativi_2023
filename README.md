@@ -3,11 +3,13 @@
 ## Operating Systems Project 2022/2023
 
 ### Compiling the emulator
-```make
+```bash
+make
 ```
 
 ### Opening Umps3
-```umps3
+```bash
+umps3
 ```
 
 ### Execution
