@@ -7,11 +7,6 @@ extern pcb_PTR current_process;
 extern pcb_t ssi_pcb;
 //interrupting device bitmap è una matrice di booleani in cui se c'è un 1 allora c'è un interrupt pending
 
-
-/**
- * questa funzione qui sotto non solo mi ritorna il device con un pending interrupt in quella line ma mi ritorna quello con più priorità quindi poi lo passo al NTHANDLER già gestito
-    inoltre posso lasciare la bitmap qui dentro e chillarmela
-*/
 static int get_numdevice(int line){
 
     int intconst[8] = { 0x00000001,//device 0
@@ -32,7 +27,6 @@ static int get_numdevice(int line){
             dnumber = i;
         }
     }
-    //debug("\nn",2,dnumber);
     return dnumber;
 }
 
@@ -120,7 +114,6 @@ static void NT_handler(int line){
     dtpreg_t *device_register = (dtpreg_t *)DEV_REG_ADDR(line, num);
     unsigned int dstatus = device_register->status;
     pcb_t* waitingProcess = blockedpcbs[(line-3) * 4 + num];
-    //debug("\np",2,waitingProcess->p_pid);
     if(line==7){ // device terminali
         device_register->command = ACK;
         sbloccapcb(num,line, blockedpcbs);
@@ -160,7 +153,6 @@ static void NT_handler(int line){
 void interrupthandler(unsigned int excCause, state_t* excState){
     startinterrupt();
     if(excCause & LOCALTIMERINT){//line 1    plt interrupt FINITI
-        //debug("\na",2,excCause);
         setTIMER(-1); //ACK interrupt
         saveTime(current_process);
         current_process->p_time += tempopassato();
@@ -171,7 +163,7 @@ void interrupthandler(unsigned int excCause, state_t* excState){
     }                                               //lascia in questo ordine per la priorità
     else if(excCause & TIMERINTERRUPT){//line 2   interval timer interrupt
         
-        //debug("\nb",2,excCause);//100 millisecondi nell'interval timer
+        //100 millisecondi nell'interval timer
         LDIT(PSECOND);
         pcb_t *unblocked_pcb;
         while ((unblocked_pcb = removeProcQ(&PseudoClockWP)) != NULL) {

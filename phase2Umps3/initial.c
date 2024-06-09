@@ -1,10 +1,4 @@
 #include "./headers/initial.h"
-/*
-MANCA: (DEBUG)
-6.1
-7 (RAMTOP)
-7.1
-*/
 
 int process_count;                  //Process Count, numero di processi attivi e non terminati
 unsigned int softBlockCount;                //Soft-Block Count, numero di processi in waiting per I/O o per tempo esaurito
@@ -35,8 +29,8 @@ int start;
 static void second_pcb(){
     pcb_PTR new_pcb = allocPcb();
     
-    RAMTOP(new_pcb->p_s.reg_sp);    //Da togliere e mettere quella sotto ma corretta
-    //new_pcb->p_s.reg_sp = RAMTOP(new_pcb->p_s.reg_sp) - (2 * FRAMESIZE); DEBUG: non so come sostituire FRAMESIZE, dovrebbe essere la grandezza del primo pcb inserito
+    RAMTOP(new_pcb->p_s.reg_sp);    
+
     new_pcb->p_s.reg_sp -= (2 * PAGESIZE);   //DEBUG
     
     //Spiegati a sezione 2.3 del manuale, la | fa la or Bit-a-Bit delle costanti che inserisco, in modo da attivare i bit giusti
@@ -63,7 +57,7 @@ static void first_pcb(){
     ssi_pcb->p_s.status = ALLOFF | IEPON | IMON | TEBITON;
 
     ssi_pcb->p_s.pc_epc = (memaddr)remoteProcedureCall;    //its PC set to the address of SSI_function_entry_point
-    //ssi_pcb->p_s.reg_t9 = (memaddr)remoteProcedureCall;
+
     ssi_pcb-> p_s.gpr[24] = ssi_pcb-> p_s.pc_epc;
   
     ssi_pcb->p_parent=NULL;

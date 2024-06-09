@@ -1,8 +1,20 @@
-# MicroPandOS su umps3
+# MicroPandOS on umps3
 
-Per compilare il progetto:
-```bash
-make
+## Operating Systems Project 2022/2023
+
+### Compiling the emulator
+```make
 ```
 
-Aprire `umps3` e creare una macchina, controllare per bene che i path corrispondano.
+### Opening Umps3
+```umps3
+```
+
+### Execution
+-Select or create a machine, in our case 'MacchinaWS'
+-Turn on the machine
+-Windows > Terminal 0
+-Press 'Continue' with your preferred speed
+
+You will see machine output on Terminal 0. To inspect execution location, check Processors tab.
+

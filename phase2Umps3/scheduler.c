@@ -1,9 +1,6 @@
 #include "./headers/scheduler.h"
 
 void scheduler(){
-    //DEBUG, capire se è uguale in questo senso, penso di si
-    //current_process = removeProcQ(&readyQueue);//Remove the PCB from the head of the Ready Queue
-    //if(current_process != NULL){
 
     if(emptyProcQ(&readyQueue) == 0){
         //  1. Se c'e' almeno un processo pronto ad essere eseguito, lo prendo dalla Ready e lo assegno al current_process.

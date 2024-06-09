@@ -1,7 +1,5 @@
 #include "./headers/exceptions.h"
 
-//DEBUG: mancano 5.4 e 5.5 ma lo faccio direttamente quando facciamo debug che devo capire delle cose prima
-
 void uTLB_RefillHandler() {
     setENTRYHI(0x80000000);
     setENTRYLO(0x00000000);
@@ -114,27 +112,27 @@ void exceptionHandler(){
 
     switch(excCode){
         //Interrupts
-        case IOINTERRUPTS:  //0                                            //DEBUG: fatto (credo)
+        case IOINTERRUPTS:  //0                                            
             interrupthandler(getCAUSE(),excState);
             break;
 
-        //TLB Exceptions                                                    //DEBUG: fatto (credo)
+        //TLB Exceptions                                                   
         case 1:
         case TLBINVLDL:     //2
         case TLBINVLDS:     //3
             kill(PGFAULTEXCEPT);
             break;
 
-        //Program Traps                                                     //DEBUG: fatto (credo)
+        //Program Traps                                                    
         case 4: case 5: case 6: case 7:
         case BREAKEXCEPTION: case PRIVINSTR:    //9,10
         case 11: case 12:
-            adebug0();
+
             kill(GENERALEXCEPT);
             break;
 
         //SYSCALL
-        case SYSEXCEPTION:              //8                    //DEBUG: manca questo
+        case SYSEXCEPTION:              //8                    
             //SYSCALL fatta in user-mode
             if((excState->status & USERPON) != 0){
 		        setCAUSE(PRIVINSTR);
@@ -144,7 +142,7 @@ void exceptionHandler(){
             int a0 = excState->reg_a0;
             if(a0 == SENDMESSAGE){           //a0 = -1
                 excState->reg_v0 = SYS1_sendMessage(excState);
-                excState->pc_epc += WORDLEN;    //DEBUG: da capire bene perché
+                excState->pc_epc += WORDLEN;    
                 LDST(excState);
             }
             else if(a0 == RECEIVEMESSAGE)//a0 = -2
